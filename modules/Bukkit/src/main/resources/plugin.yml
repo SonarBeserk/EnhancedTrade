@@ -1,0 +1,31 @@
+name: ${project.build.finalName}
+version: ${project.version}
+authors: [${project.authors}]
+main: ${project.main}
+softdepend: [${project.softdepends}]
+
+commands:
+  ${project.name.lowercase}:
+    description: master command system for the plugin
+    usage: "${project.name.short} Usage: /${project.name.short} help"
+    aliases: [${project.name.short}]
+
+permissions:
+
+  # Parent Nodes
+  ${project.name.short}.sysadmin:
+    description: "Gives system administrator level permissions, includes all lower levels."
+    children:
+      ${project.name.short}.admin: true
+      ${project.name.short}.commands.reload: true
+    default: op
+  ${project.name.short}.admin:
+    description: "Gives administrator level permissions, includes all lower levels."
+    children:
+      ${project.name.short}.commands.book: true
+    default: op
+
+  # Singular Nodes
+  ${project.name.short}.commands.reload:
+    description: "Allows use of the reload subcommand"
+    default: op
