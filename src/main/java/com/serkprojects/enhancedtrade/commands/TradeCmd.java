@@ -58,6 +58,11 @@ public class TradeCmd implements CommandExecutor {
         }
 
         if (args.length > 0) {
+            if(plugin.isTrading(senderPlayer.getUniqueId())) {
+                plugin.getMessaging().sendMessage(senderPlayer, true, plugin.getLanguage().getMessage("stillTrading"));
+                return true;
+            }
+
             Player player = plugin.getServer().getPlayer(args[0]);
 
             if(player == null) {

@@ -43,6 +43,9 @@ public class TestListener implements Listener {
         if(e.getAction() != Action.RIGHT_CLICK_BLOCK || e.getClickedBlock().getType() != Material.GLASS) {return;}
 
         TradeMenu tradeMenu = new TradeMenu(plugin);
+        tradeMenu.setTraderUUID(e.getPlayer().getUniqueId());
+
+        plugin.addActiveTrade(tradeMenu);
 
         e.getPlayer().openInventory(tradeMenu.getInventory());
     }

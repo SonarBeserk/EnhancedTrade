@@ -23,12 +23,19 @@
 
 package com.serkprojects.enhancedtrade;
 
+import com.serkprojects.enhancedtrade.commands.MainCmd;
+import com.serkprojects.enhancedtrade.listeners.MenuListener;
 import com.serkprojects.enhancedtrade.listeners.TestListener;
 import com.serkprojects.enhancedtrade.menu.TradeMenu;
 import com.serkprojects.serkcore.plugin.JavaPlugin;
 import gnu.trove.set.hash.THashSet;
+import net.milkbowl.vault.economy.Economy;
+import org.bukkit.plugin.RegisteredServiceProvider;
+
+import java.util.UUID;
 
 public class EnhancedTrade extends JavaPlugin {
+    private Economy economy = null;
 
     private THashSet<TradeMenu> activeTrades = null;
     // Use barriers in place of items waiting to be traded to prevent loss
@@ -40,7 +47,7 @@ public class EnhancedTrade extends JavaPlugin {
 
     @Override
     public boolean registerPremadeMainCMD() {
-        return true;
+        return false;
     }
 
     @Override
@@ -53,15 +60,37 @@ public class EnhancedTrade extends JavaPlugin {
 
         activeTrades = new THashSet<TradeMenu>();
 
+        setupEconomy();
+
+        getCommand(getName().toLowerCase()).setExecutor(new MainCmd(this));
+
+        getServer().getPluginManager().registerEvents(new MenuListener(this), this);
         getServer().getPluginManager().registerEvents(new TestListener(this), this);
     }
 
+    private boolean setupEconomy() {
+        RegisteredServiceProvider<Economy> economyProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
+        if (economyProvider != null) {
+            economy = economyProvider.getProvider();
+        }
+
+        return (economy != null);
+    }
+
     /**
-     * Returns the set of currently active trades
-     * @return the set of currently active trades
+     * Returns the economy instance
+     * @return the economy instance
+     */
+    public Economy getEconomy() {
+        return economy;
+    }
+
+    /**
+     * Returns the read-only set of currently active trades
+     * @return the read-only set of currently active trades
      */
     public THashSet<TradeMenu> getActiveTrades() {
-        return activeTrades;
+        return new THashSet<>(activeTrades);
     }
 
     /**
@@ -80,6 +109,21 @@ public class EnhancedTrade extends JavaPlugin {
      */
     public void removeActiveTrade(TradeMenu tradeMenu) {
         activeTrades.remove(tradeMenu);
+    }
+
+    /**
+     * Returns if a UUID is involved in a trade
+     * @param UUID the UUID to check
+     * @return if a UUID is involved in a trade
+     */
+    public boolean isTrading(UUID UUID) {
+        for(TradeMenu tradeMenu: activeTrades) {
+            if(UUID.equals(tradeMenu.getTraderUUID()) || UUID.equals(tradeMenu.getTradeeUUID())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public void onDisable() {

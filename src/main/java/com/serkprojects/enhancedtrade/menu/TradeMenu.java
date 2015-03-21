@@ -28,10 +28,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
+import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.material.Dye;
+import org.bukkit.material.Wool;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +47,16 @@ public class TradeMenu {
     private UUID traderUUID = null;
     private UUID tradeeUUID = null;
 
-    private int[] slotArray = new int[] {18, 19, 20, 21, 22, 23, 24, 25, 26};
+    // Range of slots for the trader
+    private int traderRangeStart = 0;
+    private int traderRangeEnd = 17;
+
+    // Array of reserved slots
+    private int[] reservedSlotArray = new int[] {18, 19, 20, 21, 22, 23, 24, 25, 26};
+
+    // Range of slots for the tradee
+    private int tradeeRangeStart = 27;
+    private int tradeeRangeEnd = 44;
 
     private ItemStack traderReadinessStack = null;
     private ItemStack tradeeReadinessStack = null;
@@ -58,18 +70,18 @@ public class TradeMenu {
 
     private Inventory inventory = null;
 
+    private int traderMoney = 0;
+    private int tradeeMoney = 0;
+
     /**
      * Creates an instance of the trading menu
      * @param plugin plugin used for pulling ItemStack settings
      */
     public TradeMenu(EnhancedTrade plugin) {
         this.plugin = plugin;
-
-        loadDefaultItemStacks();
-        loadDefaultInventory();
     }
 
-    private void loadDefaultItemStacks() {
+    private void buildItemStacks() {
         traderReadinessStack = getNewTraderReadinessStack();
         tradeeReadinessStack = getNewTradeeReadinessStack();
         tradeInfoStack = getNewTradeInfoStack();
@@ -81,18 +93,23 @@ public class TradeMenu {
         cancelTradeStack = getNewCancelTradeStack();
     }
 
-    private void loadDefaultInventory() {
+    /**
+     * Call to build inventory
+     */
+    public void buildInventory() {
+        buildItemStacks();
+
         inventory = Bukkit.createInventory(null, 45, ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("settings.trade.interface.name")));
 
-        inventory.setItem(slotArray[0], traderReadinessStack);
-        inventory.setItem(slotArray[1], tradeeReadinessStack);
-        inventory.setItem(slotArray[2], tradeInfoStack);
-        inventory.setItem(slotArray[3], remindPlayerStack);
-        inventory.setItem(slotArray[4], addOneCurrencyStack);
-        inventory.setItem(slotArray[5], removeOneCurrencyStack);
-        inventory.setItem(slotArray[6], addTenCurrencyStack);
-        inventory.setItem(slotArray[7], removeTenCurrencyStack);
-        inventory.setItem(slotArray[8], cancelTradeStack);
+        inventory.setItem(reservedSlotArray[0], traderReadinessStack);
+        inventory.setItem(reservedSlotArray[1], tradeeReadinessStack);
+        inventory.setItem(reservedSlotArray[2], tradeInfoStack);
+        inventory.setItem(reservedSlotArray[3], remindPlayerStack);
+        inventory.setItem(reservedSlotArray[4], addOneCurrencyStack);
+        inventory.setItem(reservedSlotArray[5], removeOneCurrencyStack);
+        inventory.setItem(reservedSlotArray[6], addTenCurrencyStack);
+        inventory.setItem(reservedSlotArray[7], removeTenCurrencyStack);
+        inventory.setItem(reservedSlotArray[8], cancelTradeStack);
     }
 
     /**
@@ -100,6 +117,10 @@ public class TradeMenu {
      * @return the current inventory for the trade menu
      */
     public Inventory getInventory() {
+        if(inventory == null) {
+            buildInventory();
+        }
+
         return inventory;
     }
 
@@ -127,13 +148,104 @@ public class TradeMenu {
      * @return if a slot is for a reserved menu item
      */
     public boolean isReservedSlot(int slot) {
-        for (int aSlotArray : slotArray) {
+        for (int aSlotArray : reservedSlotArray) {
             if (slot == aSlotArray) {
                 return true;
             }
         }
 
         return false;
+    }
+
+    /**
+     * Returns if a slot belongs to the trader
+     * @param slot the slot to check
+     * @return if a slot belongs to the trader
+     */
+    public boolean isTraderSlot(int slot) {
+        return slot >= traderRangeStart && slot <= traderRangeEnd;
+    }
+
+    /**
+     * Returns if a slot belongs to the tradee
+     * @param slot the slot to check
+     * @return if a slot belongs to the tradee
+     */
+    public boolean isTradeeSlot(int slot) {
+        return slot >= tradeeRangeStart && slot <= tradeeRangeEnd;
+    }
+
+    public void handleClick(InventoryClickEvent e) {
+        if(!isReservedSlot(e.getSlot())) {return;}
+
+        switch (e.getSlot()) {
+            case 18: {
+                if(!e.getWhoClicked().getUniqueId().equals(traderUUID)) {break;}
+
+                Wool wool = (Wool) e.getCurrentItem().getData();
+
+                if (wool.getColor() == DyeColor.RED) {
+                    wool.setColor(DyeColor.GREEN);
+                } else {
+                    wool.setColor(DyeColor.RED);
+                }
+
+                ItemStack itemStack = wool.toItemStack();
+                itemStack.setAmount(1);
+                itemStack.setItemMeta(e.getCurrentItem().getItemMeta());
+
+                e.setCurrentItem(itemStack);
+
+                for(HumanEntity humanEntity: e.getInventory().getViewers()) {
+                    Player vPlayer = (Player) humanEntity;
+                    vPlayer.updateInventory();
+                }
+
+                break;
+            }
+            case 19: {
+                if(!e.getWhoClicked().getUniqueId().equals(tradeeUUID)) {break;}
+
+                Wool wool = (Wool) e.getCurrentItem().getData();
+
+                if (wool.getColor() == DyeColor.RED) {
+                    wool.setColor(DyeColor.GREEN);
+                } else {
+                    wool.setColor(DyeColor.RED);
+                }
+
+                ItemStack itemStack = wool.toItemStack();
+                itemStack.setAmount(1);
+                itemStack.setItemMeta(e.getCurrentItem().getItemMeta());
+
+                e.setCurrentItem(itemStack);
+
+                for(HumanEntity humanEntity: e.getInventory().getViewers()) {
+                    Player vPlayer = (Player) humanEntity;
+                    vPlayer.updateInventory();
+                }
+
+                break;
+            }
+            case 21: {
+                if(e.getWhoClicked().getUniqueId().equals(traderUUID)) {
+                    if(plugin.getServer().getPlayer(tradeeUUID) != null) {
+                        plugin.getMessaging().sendMessage(plugin.getServer().getPlayer(tradeeUUID), true, plugin.getLanguage().getMessage("stillTrading"));
+                    }
+                } else if(e.getWhoClicked().getUniqueId().equals(tradeeUUID)) {
+                    if(plugin.getServer().getPlayer(traderUUID) != null) {
+                        plugin.getMessaging().sendMessage(plugin.getServer().getPlayer(traderUUID), true, plugin.getLanguage().getMessage("stillTrading"));
+                    }
+                }
+            }
+            case 22: {
+
+            }
+
+
+            default:
+                break;
+        }
     }
 
     /**
@@ -213,13 +325,24 @@ public class TradeMenu {
      * @return the default ItemStack used for the trader readiness item
      */
     public ItemStack getNewTraderReadinessStack() {
-        Dye dye = new Dye();
-        dye.setColor(DyeColor.RED);
+        Wool wool = new Wool();
+        wool.setColor(DyeColor.RED);
 
-        ItemStack itemStack = dye.toItemStack();
+        ItemStack itemStack = wool.toItemStack();
+        itemStack.setAmount(1);
         ItemMeta itemMeta = itemStack.getItemMeta();
 
-        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "toggleReadinessTrader.name")));
+        Player player = plugin.getServer().getPlayer(traderUUID);
+
+        String name;
+
+        if(player != null) {
+            name = player.getName();
+        } else {
+            name = "null";
+        }
+
+        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "toggleReadinessTrader.name").replace("{name}", name)));
 
         List<String> loreList = new ArrayList<String>();
 
@@ -238,13 +361,24 @@ public class TradeMenu {
      * @return the default ItemStack used for the tradee readiness item
      */
     public ItemStack getNewTradeeReadinessStack() {
-        Dye dye = new Dye();
-        dye.setColor(DyeColor.RED);
+        Wool wool = new Wool();
+        wool.setColor(DyeColor.RED);
 
-        ItemStack itemStack = dye.toItemStack();
+        ItemStack itemStack = wool.toItemStack();
+        itemStack.setAmount(1);
         ItemMeta itemMeta = itemStack.getItemMeta();
 
-        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "toggleReadinessTradee.name")));
+        Player player = plugin.getServer().getPlayer(tradeeUUID);
+
+        String name;
+
+        if(player != null) {
+            name = player.getName();
+        } else {
+            name = "null";
+        }
+
+        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "toggleReadinessTradee.name").replace("{name}", name)));
 
         List<String> loreList = new ArrayList<String>();
 
@@ -311,7 +445,7 @@ public class TradeMenu {
         ItemStack itemStack = new ItemStack(Material.GOLD_NUGGET);
         ItemMeta itemMeta = itemStack.getItemMeta();
 
-        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "addOneCurrency.name")));
+        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "addOneCurrency.name").replace("{currency}", plugin.getEconomy().currencyNameSingular())));
 
         List<String> loreList = new ArrayList<String>();
 
@@ -333,7 +467,7 @@ public class TradeMenu {
         ItemStack itemStack = new ItemStack(Material.GOLD_NUGGET);
         ItemMeta itemMeta = itemStack.getItemMeta();
 
-        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "removeOneCurrency.name")));
+        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "removeOneCurrency.name").replace("{currency}", plugin.getEconomy().currencyNameSingular())));
 
         List<String> loreList = new ArrayList<String>();
 
@@ -355,7 +489,7 @@ public class TradeMenu {
         ItemStack itemStack = new ItemStack(Material.GOLD_INGOT);
         ItemMeta itemMeta = itemStack.getItemMeta();
 
-        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "addTenCurrency.name")));
+        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "addTenCurrency.name").replace("{currency}", plugin.getEconomy().currencyNamePlural())));
 
         List<String> loreList = new ArrayList<String>();
 
@@ -377,7 +511,7 @@ public class TradeMenu {
         ItemStack itemStack = new ItemStack(Material.IRON_INGOT);
         ItemMeta itemMeta = itemStack.getItemMeta();
 
-        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "removeTenCurrency.name")));
+        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "removeTenCurrency.name").replace("{currency}", plugin.getEconomy().currencyNamePlural())));
 
         List<String> loreList = new ArrayList<String>();
 
@@ -419,6 +553,7 @@ public class TradeMenu {
      */
     public void setTraderUUID(UUID UUID) {
         traderUUID = UUID;
+
     }
 
     /**
