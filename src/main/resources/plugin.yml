@@ -1,4 +1,4 @@
-name: ${project.build.finalName}
+name: ${project.name}
 version: ${project.version}
 authors: [${project.authors}]
 main: ${project.main}

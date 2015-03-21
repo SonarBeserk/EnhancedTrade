@@ -1,0 +1,128 @@
+# ${project.build.finalName} Config
+
+# Version
+version: 1.0
+
+# Settings
+settings:
+
+  # The prefix to use for permissions
+  permissionPrefix: ${project.permissionprefix}
+
+  # Should extra information be logged? (Only useful for bug testing)
+  debug: false
+
+  # What language should be used when sending messages?
+  language: en
+
+  # What prefix should be used for the plugin? | {name} is replaced with the plugin name
+  prefix: "&f[&r&b{name}&r&f]"
+
+  # Trade Settings
+  trade:
+
+    # Should players in creative be allowed to trade?
+    allowCreativeTrading: false
+
+    # Trade interface Settings
+    interface:
+
+      # What name should be used for the trade menu?
+      name: "&bTrade Menu"
+
+      # Entry Settings
+      entry:
+
+       # Toggle Readiness for trader entry
+        toggleReadinessTrader:
+
+          # What named should be used for this entry? | {name} - the name of the player
+          name: "&bToggle Readiness ({name})"
+
+          # What lore should be added to this entry?
+          lore:
+          - "Click to mark yourself as ready for this trade!"
+
+       # Toggle Readiness for tradee entry
+        toggleReadinessTradee:
+
+          # What named should be used for this entry?
+          name: "&bToggle Readiness ({name})"
+
+          # What lore should be added to this entry?
+          lore:
+          - "Click to mark yourself as ready for this trade!"
+
+       # Trade Info entry
+        tradeInfo:
+
+          # What named should be used for this entry?
+          name: "&bTrade Info"
+
+          # What lore should be added to this entry?
+          lore:
+          - "Current Trade Information:"
+
+       # Remind Player entry
+        remindPlayer:
+
+          # What named should be used for this entry?
+          name: "&bRemind Player of Trade"
+
+          # What lore should be added to this entry?
+          lore:
+          - "Click to message other player reminding them of the trade!"
+
+       # Add one currency entry
+        addOneCurrency:
+
+          # What named should be used for this entry? | {currency} - the name of the configured currency
+          name: "&bAdd 1 {currency}"
+
+          # What lore should be added to this entry? | {currency} - the name of the configured currency
+          lore:
+          - "Click to add 1 {currency} to the trade."
+          - "Shift Click to add 10 {currency} to the trade"
+
+       # Remove one currency entry
+        removeOneCurrency:
+
+          # What named should be used for this entry? | {currency} - the name of the configured currency
+          name: "&bRemove 1 {currency}"
+
+          # What lore should be added to this entry? | {currency} - the name of the configured currency
+          lore:
+          - "Click to remove 1 {currency} from the trade."
+          - "Shift Click to remove 10 {currency} from the trade"
+
+       # Add Ten currency entry
+        addTenCurrency:
+
+          # What named should be used for this entry? | {currency} - the name of the configured currency
+          name: "&bAdd 10 {currency}"
+
+          # What lore should be added to this entry? | {currency} - the name of the configured currency
+          lore:
+          - "Click to add 10 {currency} to the trade."
+          - "Shift Click to add 100 {currency} to the trade"
+
+       # Remove Ten currency entry
+        removeTenCurrency:
+
+          # What named should be used for this entry? | {currency} - the name of the configured currency
+          name: "&bRemove 10 {currency}"
+
+          # What lore should be added to this entry? | {currency} - the name of the configured currency
+          lore:
+          - "Click to remove 10 {currency} from the trade."
+          - "Shift Click to remove 100 {currency} from the trade"
+
+       # Cancel Trade entry
+        cancelTrade:
+
+          # What named should be used for this entry?
+          name: "&bCancel Trade"
+
+          # What lore should be added to this entry?
+          lore:
+          - "Click to cancel this trade!"

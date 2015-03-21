@@ -8,6 +8,9 @@ version: "1.0"
 # Usage for the plugin master command | {name} - the name of the plugin
 usageMain: "&7Subcommands: \n reload - reloads the all the plugin's files"
 
+# Usage for the trade command
+usageTrade: "&7Trade Usage: /trade (name)"
+
 # Missing Version
 
 # Sent when a version can not be found in the config file
