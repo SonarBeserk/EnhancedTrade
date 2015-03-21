@@ -127,8 +127,8 @@ public class TradeMenu {
      * @return if a slot is for a reserved menu item
      */
     public boolean isReservedSlot(int slot) {
-        for(int i = 0; i < slotArray.length; i++) {
-            if(slot == slotArray[i]) {
+        for (int aSlotArray : slotArray) {
+            if (slot == aSlotArray) {
                 return true;
             }
         }
