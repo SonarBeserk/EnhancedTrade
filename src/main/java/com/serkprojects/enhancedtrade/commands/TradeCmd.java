@@ -49,6 +49,7 @@ public class TradeCmd implements CommandExecutor {
         if (args.length == 0) {
             for(TradeMenu tradeMenu: plugin.getActiveTrades()) {
                 if(tradeMenu.getTraderUUID().equals(senderPlayer.getUniqueId()) || tradeMenu.getTradeeUUID().equals(senderPlayer.getUniqueId())) {
+                    tradeMenu.buildInventory();
                     senderPlayer.openInventory(senderPlayer.getInventory());
                 }
             }

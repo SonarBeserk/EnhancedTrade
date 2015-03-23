@@ -339,7 +339,7 @@ public class TradeMenu {
         if(player != null) {
             name = player.getName();
         } else {
-            name = "null";
+            name = "none";
         }
 
         itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "toggleReadinessTrader.name").replace("{name}", name)));
@@ -375,7 +375,7 @@ public class TradeMenu {
         if(player != null) {
             name = player.getName();
         } else {
-            name = "null";
+            name = "none";
         }
 
         itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "toggleReadinessTradee.name").replace("{name}", name)));
@@ -445,12 +445,20 @@ public class TradeMenu {
         ItemStack itemStack = new ItemStack(Material.GOLD_NUGGET);
         ItemMeta itemMeta = itemStack.getItemMeta();
 
-        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "addOneCurrency.name").replace("{currency}", plugin.getEconomy().currencyNameSingular())));
+        String currencyName;
+
+        if(plugin.getEconomy() != null) {
+            currencyName = plugin.getEconomy().currencyNameSingular();
+        } else {
+            currencyName = "none";
+        }
+
+        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "addOneCurrency.name").replace("{currency}", currencyName)));
 
         List<String> loreList = new ArrayList<String>();
 
         for(String loreString: plugin.getConfig().getStringList(headerString + "addOneCurrency.lore")) {
-            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString));
+            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString.replace("{currency}", currencyName)));
         }
 
         itemMeta.setLore(loreList);
@@ -467,12 +475,20 @@ public class TradeMenu {
         ItemStack itemStack = new ItemStack(Material.GOLD_NUGGET);
         ItemMeta itemMeta = itemStack.getItemMeta();
 
-        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "removeOneCurrency.name").replace("{currency}", plugin.getEconomy().currencyNameSingular())));
+        String currencyName;
+
+        if(plugin.getEconomy() != null) {
+            currencyName = plugin.getEconomy().currencyNameSingular();
+        } else {
+            currencyName = "none";
+        }
+
+        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "removeOneCurrency.name").replace("{currency}", currencyName)));
 
         List<String> loreList = new ArrayList<String>();
 
         for(String loreString: plugin.getConfig().getStringList(headerString + "removeOneCurrency.lore")) {
-            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString));
+            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString.replace("{currency}", currencyName)));
         }
 
         itemMeta.setLore(loreList);
@@ -489,12 +505,20 @@ public class TradeMenu {
         ItemStack itemStack = new ItemStack(Material.GOLD_INGOT);
         ItemMeta itemMeta = itemStack.getItemMeta();
 
-        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "addTenCurrency.name").replace("{currency}", plugin.getEconomy().currencyNamePlural())));
+        String currencyName;
+
+        if(plugin.getEconomy() != null) {
+            currencyName = plugin.getEconomy().currencyNamePlural();
+        } else {
+            currencyName = "none";
+        }
+
+        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "addTenCurrency.name").replace("{currency}", currencyName)));
 
         List<String> loreList = new ArrayList<String>();
 
         for(String loreString: plugin.getConfig().getStringList(headerString + "addTenCurrency.lore")) {
-            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString));
+            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString.replace("{currency}", currencyName)));
         }
 
         itemMeta.setLore(loreList);
@@ -511,12 +535,20 @@ public class TradeMenu {
         ItemStack itemStack = new ItemStack(Material.IRON_INGOT);
         ItemMeta itemMeta = itemStack.getItemMeta();
 
-        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "removeTenCurrency.name").replace("{currency}", plugin.getEconomy().currencyNamePlural())));
+        String currencyName;
+
+        if(plugin.getEconomy() != null) {
+            currencyName = plugin.getEconomy().currencyNamePlural();
+        } else {
+            currencyName = "none";
+        }
+
+        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "removeTenCurrency.name").replace("{currency}", currencyName)));
 
         List<String> loreList = new ArrayList<String>();
 
         for(String loreString: plugin.getConfig().getStringList(headerString + "removeTenCurrency.lore")) {
-            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString));
+            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString.replace("{currency}", currencyName)));
         }
 
         itemMeta.setLore(loreList);
