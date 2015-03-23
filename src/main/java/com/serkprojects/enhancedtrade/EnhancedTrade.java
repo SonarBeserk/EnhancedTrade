@@ -23,13 +23,13 @@
 
 package com.serkprojects.enhancedtrade;
 
-import com.serkprojects.enhancedtrade.commands.MainCmd;
 import com.serkprojects.enhancedtrade.listeners.MenuListener;
 import com.serkprojects.enhancedtrade.listeners.TestListener;
 import com.serkprojects.enhancedtrade.menu.TradeMenu;
 import com.serkprojects.serkcore.plugin.JavaPlugin;
 import gnu.trove.set.hash.THashSet;
 import net.milkbowl.vault.economy.Economy;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.UUID;
@@ -47,12 +47,27 @@ public class EnhancedTrade extends JavaPlugin {
 
     @Override
     public boolean registerPremadeMainCMD() {
-        return false;
+        return true;
     }
 
     @Override
     public String getPermissionPrefix() {
         return getConfig().getString("settings.permissionPrefix");
+    }
+
+    @Override
+    public void onReload() {
+        for(TradeMenu tradeMenu: getActiveTrades()) {
+            for(HumanEntity humanEntity: tradeMenu.getInventory().getViewers()) {
+                humanEntity.closeInventory();
+            }
+
+            tradeMenu.buildInventory();
+
+            for(HumanEntity humanEntity: tradeMenu.getInventory().getViewers()) {
+                humanEntity.openInventory(tradeMenu.getInventory());
+            }
+        }
     }
 
     public void onEnable() {
@@ -61,8 +76,6 @@ public class EnhancedTrade extends JavaPlugin {
         activeTrades = new THashSet<TradeMenu>();
 
         setupEconomy();
-
-        getCommand(getName().toLowerCase()).setExecutor(new MainCmd(this));
 
         getServer().getPluginManager().registerEvents(new MenuListener(this), this);
         getServer().getPluginManager().registerEvents(new TestListener(this), this);

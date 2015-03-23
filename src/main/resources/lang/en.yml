@@ -46,3 +46,8 @@ commandPlayerRequired: "You must be a player to use this command!"
 
 # Sent when a player can not be found | {name} - the name of the player
 playerNotFound: "&b{name} &ccan not be found!"
+
+# Still
+
+# Sent when a player is still trading
+stillTrading: "&cYou are still trading! Please run /trade to reopen the trade!"

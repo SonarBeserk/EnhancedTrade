@@ -553,7 +553,7 @@ public class TradeMenu {
      */
     public void setTraderUUID(UUID UUID) {
         traderUUID = UUID;
-
+        buildInventory();
     }
 
     /**
@@ -562,5 +562,6 @@ public class TradeMenu {
      */
     public void setTradeeUUID(UUID UUID) {
         tradeeUUID = UUID;
+        buildInventory();
     }
 }
