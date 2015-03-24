@@ -59,9 +59,11 @@ settings:
           # What named should be used for this entry?
           name: "&bTrade Info"
 
-          # What lore should be added to this entry?
+          # What lore should be added to this entry? | {trader-money} - the value for the trader's money | {tradee-money} - the value for the tradee's money
           lore:
           - "Current Trade Information:"
+          - "Trader Money: {trader-money}"
+          - "Tradee Money: {tradee-money}"
 
        # Remind Player entry
         remindPlayer:
@@ -71,7 +73,7 @@ settings:
 
           # What lore should be added to this entry?
           lore:
-          - "Click to message other player reminding them of the trade!"
+          - "Click to remind other player of the trade!"
 
        # Add one currency entry
         addOneCurrency:
