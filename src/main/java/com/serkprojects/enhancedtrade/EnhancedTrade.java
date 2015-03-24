@@ -23,8 +23,8 @@
 
 package com.serkprojects.enhancedtrade;
 
+import com.serkprojects.enhancedtrade.commands.TradeCmd;
 import com.serkprojects.enhancedtrade.listeners.MenuListener;
-import com.serkprojects.enhancedtrade.listeners.TestListener;
 import com.serkprojects.enhancedtrade.menu.TradeMenu;
 import com.serkprojects.serkcore.plugin.JavaPlugin;
 import gnu.trove.set.hash.THashSet;
@@ -77,8 +77,9 @@ public class EnhancedTrade extends JavaPlugin {
 
         setupEconomy();
 
+        getCommand("trade").setExecutor(new TradeCmd(this));
+
         getServer().getPluginManager().registerEvents(new MenuListener(this), this);
-        getServer().getPluginManager().registerEvents(new TestListener(this), this);
     }
 
     private boolean setupEconomy() {

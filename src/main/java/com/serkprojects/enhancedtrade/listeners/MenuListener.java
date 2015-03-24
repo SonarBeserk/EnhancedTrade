@@ -29,7 +29,9 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryType;
 
 public class MenuListener implements Listener {
@@ -51,7 +53,7 @@ public class MenuListener implements Listener {
         TradeMenu currentTradeMenu = null;
 
         for(TradeMenu tradeMenu: plugin.getActiveTrades()) {
-            if(tradeMenu.getTraderUUID().equals(e.getWhoClicked().getUniqueId()) || tradeMenu.getTradeeUUID().equals(e.getWhoClicked().getUniqueId())) {
+            if(tradeMenu.getTraderUUID() != null && tradeMenu.getTraderUUID().equals(e.getWhoClicked().getUniqueId()) || tradeMenu.getTradeeUUID() != null && tradeMenu.getTradeeUUID().equals(e.getWhoClicked().getUniqueId())) {
                 currentTradeMenu = tradeMenu;
                 break;
             }
@@ -59,7 +61,7 @@ public class MenuListener implements Listener {
 
         if(currentTradeMenu == null) {return;}
 
-        if(currentTradeMenu.isReservedSlot(e.getSlot())) {
+        if(currentTradeMenu.isReservedSlot(e.getRawSlot())) {
             e.setCancelled(true);
 
             if(e.getCursor() != null) {
@@ -69,10 +71,47 @@ public class MenuListener implements Listener {
             return;
         }
 
-        if(currentTradeMenu.getTraderUUID() != null && currentTradeMenu.isTraderSlot(e.getSlot()) && !currentTradeMenu.getTraderUUID().equals(e.getWhoClicked().getUniqueId())) {
+        if(e.isShiftClick() || e.getClick() == ClickType.DOUBLE_CLICK) {
             e.setCancelled(true);
-        } else if(currentTradeMenu.getTradeeUUID() != null && currentTradeMenu.isTradeeSlot(e.getSlot()) && !currentTradeMenu.getTradeeUUID().equals(e.getWhoClicked().getUniqueId())) {
-            e.setCancelled(true);
+            return;
         }
+
+        if(e.getSlotType() == InventoryType.SlotType.OUTSIDE) {
+            e.setCancelled(true);
+            return;
+        }
+
+        if(currentTradeMenu.isTraderSlot(e.getRawSlot())) {
+            if(currentTradeMenu.getTraderUUID() == null || !currentTradeMenu.getTraderUUID().equals(e.getWhoClicked().getUniqueId())) {
+                e.setCancelled(true);
+            }
+        } else if(currentTradeMenu.isTradeeSlot(e.getRawSlot())) {
+            if (currentTradeMenu.getTradeeUUID() == null || !currentTradeMenu.getTradeeUUID().equals(e.getWhoClicked().getUniqueId())) {
+                e.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void inventoryDrag(InventoryDragEvent e) {
+        if(e.getInventory() == null || e.getInventory().getType() != InventoryType.CHEST || e.getWhoClicked() == null || !(e.getWhoClicked() instanceof Player)) {return;}
+        if(e.getInventory().getTitle() == null || e.getInventory().getTitle().trim().equalsIgnoreCase("")) {return;}
+
+        String menuTitle = ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("settings.trade.interface.name"));
+
+        if(!e.getInventory().getTitle().equalsIgnoreCase(menuTitle)) {return;}
+
+        TradeMenu currentTradeMenu = null;
+
+        for(TradeMenu tradeMenu: plugin.getActiveTrades()) {
+            if(tradeMenu.getTraderUUID() != null && tradeMenu.getTraderUUID().equals(e.getWhoClicked().getUniqueId()) || tradeMenu.getTradeeUUID() != null && tradeMenu.getTradeeUUID().equals(e.getWhoClicked().getUniqueId())) {
+                currentTradeMenu = tradeMenu;
+                break;
+            }
+        }
+
+        if(currentTradeMenu == null) {return;}
+
+        e.setCancelled(true);
     }
 }

@@ -17,6 +17,7 @@
 
         <project.main>com.serkprojects.enhancedtrade.EnhancedTrade</project.main>
         <project.authors>SonarBeserk</project.authors>
+        <project.depends>Vault</project.depends>
         <project.softdepends>SerkCore, Vault</project.softdepends>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -80,6 +81,9 @@
                 <configuration>
                     <header>${basedir}/src/main/resources/LICENSE.txt</header>
                     <failIfMissing>true</failIfMissing>
+                    <includes>
+                        <include>**/**.java</include>
+                    </includes>
                 </configuration>
                 <executions>
                     <execution>

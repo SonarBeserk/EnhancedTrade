@@ -2,6 +2,7 @@ name: ${project.name}
 version: ${project.version}
 authors: [${project.authors}]
 main: ${project.main}
+depend: [${project.depends}]
 softdepend: [${project.softdepends}]
 
 commands:
@@ -9,7 +10,9 @@ commands:
     description: master command system for the plugin
     usage: "${project.name.short} Usage: /${project.name.short} help"
     aliases: [${project.name.short}]
-
+  trade:
+    description: command used for trading
+    usage: "/trade Usage: /trade (name)"
 permissions:
 
   # Parent Nodes

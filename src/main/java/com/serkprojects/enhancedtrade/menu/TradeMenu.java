@@ -99,7 +99,16 @@ public class TradeMenu {
     public void buildInventory() {
         buildItemStacks();
 
+        ItemStack[] oldItems = null;
+        if(inventory != null && inventory.getContents().length > 0) {
+            oldItems = inventory.getContents().clone();
+        }
+
         inventory = Bukkit.createInventory(null, 45, ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("settings.trade.interface.name")));
+
+        if(oldItems != null) {
+            inventory.setContents(oldItems);
+        }
 
         inventory.setItem(reservedSlotArray[0], traderReadinessStack);
         inventory.setItem(reservedSlotArray[1], tradeeReadinessStack);
@@ -175,6 +184,10 @@ public class TradeMenu {
         return slot >= tradeeRangeStart && slot <= tradeeRangeEnd;
     }
 
+    /**
+     * Called when a reserved slot menu item is clicked
+     * @param e the inventory click event related to the click
+     */
     public void handleClick(InventoryClickEvent e) {
         if(!isReservedSlot(e.getSlot())) {return;}
 
@@ -405,7 +418,7 @@ public class TradeMenu {
         List<String> loreList = new ArrayList<String>();
 
         for(String loreString: plugin.getConfig().getStringList(headerString + "tradeInfo.lore")) {
-            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString));
+            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString.replace("{trader-money}", traderMoney + " " + getCurrencyName(traderMoney)).replace("{tradee-money}", tradeeMoney + " " + getCurrencyName(tradeeMoney))));
         }
 
         itemMeta.setLore(loreList);
@@ -445,20 +458,12 @@ public class TradeMenu {
         ItemStack itemStack = new ItemStack(Material.GOLD_NUGGET);
         ItemMeta itemMeta = itemStack.getItemMeta();
 
-        String currencyName;
-
-        if(plugin.getEconomy() != null) {
-            currencyName = plugin.getEconomy().currencyNameSingular();
-        } else {
-            currencyName = "none";
-        }
-
-        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "addOneCurrency.name").replace("{currency}", currencyName)));
+        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "addOneCurrency.name").replace("{currency}", getCurrencyName(1))));
 
         List<String> loreList = new ArrayList<String>();
 
         for(String loreString: plugin.getConfig().getStringList(headerString + "addOneCurrency.lore")) {
-            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString.replace("{currency}", currencyName)));
+            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString.replace("{currency}", getCurrencyName(1))));
         }
 
         itemMeta.setLore(loreList);
@@ -475,20 +480,12 @@ public class TradeMenu {
         ItemStack itemStack = new ItemStack(Material.GOLD_NUGGET);
         ItemMeta itemMeta = itemStack.getItemMeta();
 
-        String currencyName;
-
-        if(plugin.getEconomy() != null) {
-            currencyName = plugin.getEconomy().currencyNameSingular();
-        } else {
-            currencyName = "none";
-        }
-
-        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "removeOneCurrency.name").replace("{currency}", currencyName)));
+        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "removeOneCurrency.name").replace("{currency}", getCurrencyName(1))));
 
         List<String> loreList = new ArrayList<String>();
 
         for(String loreString: plugin.getConfig().getStringList(headerString + "removeOneCurrency.lore")) {
-            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString.replace("{currency}", currencyName)));
+            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString.replace("{currency}", getCurrencyName(1))));
         }
 
         itemMeta.setLore(loreList);
@@ -505,20 +502,12 @@ public class TradeMenu {
         ItemStack itemStack = new ItemStack(Material.GOLD_INGOT);
         ItemMeta itemMeta = itemStack.getItemMeta();
 
-        String currencyName;
-
-        if(plugin.getEconomy() != null) {
-            currencyName = plugin.getEconomy().currencyNamePlural();
-        } else {
-            currencyName = "none";
-        }
-
-        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "addTenCurrency.name").replace("{currency}", currencyName)));
+        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "addTenCurrency.name").replace("{currency}", getCurrencyName(10))));
 
         List<String> loreList = new ArrayList<String>();
 
         for(String loreString: plugin.getConfig().getStringList(headerString + "addTenCurrency.lore")) {
-            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString.replace("{currency}", currencyName)));
+            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString.replace("{currency}", getCurrencyName(10))));
         }
 
         itemMeta.setLore(loreList);
@@ -535,20 +524,12 @@ public class TradeMenu {
         ItemStack itemStack = new ItemStack(Material.IRON_INGOT);
         ItemMeta itemMeta = itemStack.getItemMeta();
 
-        String currencyName;
-
-        if(plugin.getEconomy() != null) {
-            currencyName = plugin.getEconomy().currencyNamePlural();
-        } else {
-            currencyName = "none";
-        }
-
-        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "removeTenCurrency.name").replace("{currency}", currencyName)));
+        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "removeTenCurrency.name").replace("{currency}", getCurrencyName(10))));
 
         List<String> loreList = new ArrayList<String>();
 
         for(String loreString: plugin.getConfig().getStringList(headerString + "removeTenCurrency.lore")) {
-            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString.replace("{currency}", currencyName)));
+            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString.replace("{currency}", getCurrencyName(10))));
         }
 
         itemMeta.setLore(loreList);
@@ -595,5 +576,17 @@ public class TradeMenu {
     public void setTradeeUUID(UUID UUID) {
         tradeeUUID = UUID;
         buildInventory();
+    }
+
+    private String getCurrencyName(int amount) {
+        String currencyName;
+
+        if(plugin.getEconomy() != null) {
+            currencyName = plugin.getEconomy().format(amount).replace(String.valueOf(amount), "");
+        } else {
+            currencyName = "none";
+        }
+
+        return currencyName;
     }
 }
