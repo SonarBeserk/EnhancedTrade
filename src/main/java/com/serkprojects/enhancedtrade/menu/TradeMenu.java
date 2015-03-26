@@ -127,10 +127,7 @@ public class TradeMenu {
         if(!built) {
             buildInventory();
         }
-
-        plugin.getLogger().info("Contents Size: " + inventory.getContents().length);
-        plugin.getLogger().info("Contents: " + inventory.getContents().toString());
-
+        
         return inventory;
     }
 
