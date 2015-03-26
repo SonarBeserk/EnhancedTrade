@@ -47,10 +47,20 @@ public class TradeCmd implements CommandExecutor {
         Player senderPlayer = (Player) sender;
 
         if (args.length == 0) {
+            TradeMenu currentTradeMenu = null;
             for(TradeMenu tradeMenu: plugin.getActiveTrades()) {
                 if(tradeMenu.getTraderUUID() != null && tradeMenu.getTraderUUID().equals(senderPlayer.getUniqueId()) || tradeMenu.getTradeeUUID() != null && tradeMenu.getTradeeUUID().equals(senderPlayer.getUniqueId())) {
-                    senderPlayer.openInventory(tradeMenu.getInventory());
+                    if(tradeMenu.getTraderUUID() == null || tradeMenu.getTradeeUUID() == null) {
+                        plugin.getMessaging().sendMessage(senderPlayer, true, plugin.getLanguage().getMessage("tradeWaiting"));
+                        return true;
+                    }
+
+                    currentTradeMenu = tradeMenu;
                 }
+            }
+
+            if(currentTradeMenu != null) {
+                senderPlayer.openInventory(currentTradeMenu.getInventory());
             }
 
             help(sender);

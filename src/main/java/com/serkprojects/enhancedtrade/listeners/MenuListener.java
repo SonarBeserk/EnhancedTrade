@@ -61,6 +61,11 @@ public class MenuListener implements Listener {
 
         if(currentTradeMenu == null) {return;}
 
+        if(e.getSlotType() == InventoryType.SlotType.OUTSIDE || e.getClick() == ClickType.DOUBLE_CLICK) {
+            e.setCancelled(true);
+            return;
+        }
+
         if(currentTradeMenu.isReservedSlot(e.getRawSlot())) {
             e.setCancelled(true);
 
@@ -71,12 +76,7 @@ public class MenuListener implements Listener {
             return;
         }
 
-        if(e.isShiftClick() || e.getClick() == ClickType.DOUBLE_CLICK) {
-            e.setCancelled(true);
-            return;
-        }
-
-        if(e.getSlotType() == InventoryType.SlotType.OUTSIDE) {
+        if(e.isShiftClick()) {
             e.setCancelled(true);
             return;
         }

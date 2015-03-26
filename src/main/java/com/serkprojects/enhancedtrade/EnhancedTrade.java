@@ -25,6 +25,7 @@ package com.serkprojects.enhancedtrade;
 
 import com.serkprojects.enhancedtrade.commands.TradeCmd;
 import com.serkprojects.enhancedtrade.listeners.MenuListener;
+import com.serkprojects.enhancedtrade.listeners.PlayerListener;
 import com.serkprojects.enhancedtrade.menu.TradeMenu;
 import com.serkprojects.serkcore.plugin.JavaPlugin;
 import gnu.trove.set.hash.THashSet;
@@ -32,6 +33,7 @@ import net.milkbowl.vault.economy.Economy;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
+import java.util.List;
 import java.util.UUID;
 
 public class EnhancedTrade extends JavaPlugin {
@@ -57,16 +59,26 @@ public class EnhancedTrade extends JavaPlugin {
 
     @Override
     public void onReload() {
-        for(TradeMenu tradeMenu: getActiveTrades()) {
-            for(HumanEntity humanEntity: tradeMenu.getInventory().getViewers()) {
-                humanEntity.closeInventory();
-            }
+        for(final TradeMenu tradeMenu: getActiveTrades()) {
+            final List<HumanEntity> viewers = tradeMenu.getInventory().getViewers();
 
-            tradeMenu.buildInventory();
+            getServer().getScheduler().runTaskLater(this, new Runnable() {
+                @Override
+                public void run() {
+                    for(HumanEntity humanEntity: viewers) {
+                        humanEntity.closeInventory();
+                    }
+                }
+            }, 1);
 
-            for(HumanEntity humanEntity: tradeMenu.getInventory().getViewers()) {
-                humanEntity.openInventory(tradeMenu.getInventory());
-            }
+            getServer().getScheduler().runTaskLater(this, new Runnable() {
+                @Override
+                public void run() {
+                    for(HumanEntity humanEntity: viewers) {
+                        humanEntity.openInventory(tradeMenu.getInventory());
+                    }
+                }
+            }, 1);
         }
     }
 
@@ -80,6 +92,7 @@ public class EnhancedTrade extends JavaPlugin {
         getCommand("trade").setExecutor(new TradeCmd(this));
 
         getServer().getPluginManager().registerEvents(new MenuListener(this), this);
+        getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
     }
 
     private boolean setupEconomy() {

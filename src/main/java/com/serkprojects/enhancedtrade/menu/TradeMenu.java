@@ -24,17 +24,17 @@
 package com.serkprojects.enhancedtrade.menu;
 
 import com.serkprojects.enhancedtrade.EnhancedTrade;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.DyeColor;
-import org.bukkit.Material;
+import gnu.trove.set.hash.THashSet;
+import org.bukkit.*;
 import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.Wool;
+import org.bukkit.metadata.FixedMetadataValue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +47,8 @@ public class TradeMenu {
     private UUID traderUUID = null;
     private UUID tradeeUUID = null;
 
+    private boolean built = false;
+
     // Range of slots for the trader
     private int traderRangeStart = 0;
     private int traderRangeEnd = 17;
@@ -58,15 +60,15 @@ public class TradeMenu {
     private int tradeeRangeStart = 27;
     private int tradeeRangeEnd = 44;
 
-    private ItemStack traderReadinessStack = null;
-    private ItemStack tradeeReadinessStack = null;
-    private ItemStack tradeInfoStack = null;
-    private ItemStack remindPlayerStack = null;
-    private ItemStack addOneCurrencyStack = null;
-    private ItemStack removeOneCurrencyStack = null;
-    private ItemStack addTenCurrencyStack = null;
-    private ItemStack removeTenCurrencyStack = null;
-    private ItemStack cancelTradeStack = null;
+    private ItemStack traderReadinessStack = null; //18
+    private ItemStack tradeeReadinessStack = null; //19
+    private ItemStack tradeInfoStack = null; //20
+    private ItemStack remindPlayerStack = null; //21
+    private ItemStack addOneCurrencyStack = null; //22
+    private ItemStack removeOneCurrencyStack = null; //23
+    private ItemStack addTenCurrencyStack = null; //24
+    private ItemStack removeTenCurrencyStack = null; //25
+    private ItemStack cancelTradeStack = null; //26
 
     private Inventory inventory = null;
 
@@ -79,9 +81,14 @@ public class TradeMenu {
      */
     public TradeMenu(EnhancedTrade plugin) {
         this.plugin = plugin;
+
+        inventory = Bukkit.createInventory(null, 45, ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("settings.trade.interface.name")));
     }
 
-    private void buildItemStacks() {
+    /**
+     * Call to build itemstacks
+     */
+    private void buildDefaultItemStacks() {
         traderReadinessStack = getNewTraderReadinessStack();
         tradeeReadinessStack = getNewTradeeReadinessStack();
         tradeInfoStack = getNewTradeInfoStack();
@@ -96,19 +103,8 @@ public class TradeMenu {
     /**
      * Call to build inventory
      */
-    public void buildInventory() {
-        buildItemStacks();
-
-        ItemStack[] oldItems = null;
-        if(inventory != null && inventory.getContents().length > 0) {
-            oldItems = inventory.getContents().clone();
-        }
-
-        inventory = Bukkit.createInventory(null, 45, ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("settings.trade.interface.name")));
-
-        if(oldItems != null) {
-            inventory.setContents(oldItems);
-        }
+    private void buildInventory() {
+        buildDefaultItemStacks();
 
         inventory.setItem(reservedSlotArray[0], traderReadinessStack);
         inventory.setItem(reservedSlotArray[1], tradeeReadinessStack);
@@ -119,6 +115,8 @@ public class TradeMenu {
         inventory.setItem(reservedSlotArray[6], addTenCurrencyStack);
         inventory.setItem(reservedSlotArray[7], removeTenCurrencyStack);
         inventory.setItem(reservedSlotArray[8], cancelTradeStack);
+
+        built = true;
     }
 
     /**
@@ -126,9 +124,12 @@ public class TradeMenu {
      * @return the current inventory for the trade menu
      */
     public Inventory getInventory() {
-        if(inventory == null) {
+        if(!built) {
             buildInventory();
         }
+
+        plugin.getLogger().info("Contents Size: " + inventory.getContents().length);
+        plugin.getLogger().info("Contents: " + inventory.getContents().toString());
 
         return inventory;
     }
@@ -195,49 +196,13 @@ public class TradeMenu {
             case 18: {
                 if(!e.getWhoClicked().getUniqueId().equals(traderUUID)) {break;}
 
-                Wool wool = (Wool) e.getCurrentItem().getData();
-
-                if (wool.getColor() == DyeColor.RED) {
-                    wool.setColor(DyeColor.GREEN);
-                } else {
-                    wool.setColor(DyeColor.RED);
-                }
-
-                ItemStack itemStack = wool.toItemStack();
-                itemStack.setAmount(1);
-                itemStack.setItemMeta(e.getCurrentItem().getItemMeta());
-
-                e.setCurrentItem(itemStack);
-
-                for(HumanEntity humanEntity: e.getInventory().getViewers()) {
-                    Player vPlayer = (Player) humanEntity;
-                    vPlayer.updateInventory();
-                }
-
+                toggleReadinessStack(e);
                 break;
             }
             case 19: {
                 if(!e.getWhoClicked().getUniqueId().equals(tradeeUUID)) {break;}
 
-                Wool wool = (Wool) e.getCurrentItem().getData();
-
-                if (wool.getColor() == DyeColor.RED) {
-                    wool.setColor(DyeColor.GREEN);
-                } else {
-                    wool.setColor(DyeColor.RED);
-                }
-
-                ItemStack itemStack = wool.toItemStack();
-                itemStack.setAmount(1);
-                itemStack.setItemMeta(e.getCurrentItem().getItemMeta());
-
-                e.setCurrentItem(itemStack);
-
-                for(HumanEntity humanEntity: e.getInventory().getViewers()) {
-                    Player vPlayer = (Player) humanEntity;
-                    vPlayer.updateInventory();
-                }
-
+                toggleReadinessStack(e);
                 break;
             }
             case 21: {
@@ -250,12 +215,133 @@ public class TradeMenu {
                         plugin.getMessaging().sendMessage(plugin.getServer().getPlayer(traderUUID), true, plugin.getLanguage().getMessage("stillTrading"));
                     }
                 }
+
+                break;
             }
             case 22: {
+                if(plugin.getEconomy() != null) {
+                    int cost = 0;
 
+                    if(e.isShiftClick()) {
+                        cost = 10;
+                    } else {
+                        cost = 1;
+                    }
+
+                    if(!plugin.getEconomy().has((OfflinePlayer) e.getWhoClicked(), cost)) {
+                        plugin.getMessaging().sendMessage(e.getWhoClicked(), true, plugin.getLanguage().getMessage("canNotAfford"));
+                        return;
+                    }
+
+                    plugin.getEconomy().withdrawPlayer((OfflinePlayer) e.getWhoClicked(), cost);
+
+                    if(traderUUID != null && traderUUID.equals(e.getWhoClicked().getUniqueId())) {
+                        traderMoney = traderMoney + cost;
+                    } else if(tradeeUUID != null && tradeeUUID.equals(e.getWhoClicked().getUniqueId())) {
+                        tradeeMoney = tradeeMoney + cost;
+                    }
+                }
+
+                refreshTraderInfo(e);
+                break;
             }
+            case 23: {
+                if(plugin.getEconomy() != null) {
+                    int returned = 0;
 
+                    if(e.isShiftClick()) {
+                        returned = 10;
+                    } else {
+                        returned = 1;
+                    }
 
+                    if(traderUUID != null && traderUUID.equals(e.getWhoClicked().getUniqueId())) {
+                        if(traderMoney < returned) {
+                            plugin.getEconomy().depositPlayer((OfflinePlayer) e.getWhoClicked(), traderMoney);
+                            traderMoney = 0;
+                        } else {
+                            plugin.getEconomy().depositPlayer((OfflinePlayer) e.getWhoClicked(), returned);
+                            traderMoney = traderMoney - returned;
+                        }
+
+                        traderMoney = traderMoney - returned;
+                    } else if(tradeeUUID != null && tradeeUUID.equals(e.getWhoClicked().getUniqueId())) {
+                        if(tradeeMoney < returned) {
+                            plugin.getEconomy().depositPlayer((OfflinePlayer) e.getWhoClicked(), tradeeMoney);
+                            tradeeMoney = 0;
+                        } else {
+                            plugin.getEconomy().depositPlayer((OfflinePlayer) e.getWhoClicked(), returned);
+                            tradeeMoney = tradeeMoney - returned;
+                        }
+                    }
+                }
+
+                refreshTraderInfo(e);
+                break;
+            }
+            case 24: {
+                if(plugin.getEconomy() != null) {
+                    int cost = 0;
+
+                    if(e.isShiftClick()) {
+                        cost = 100;
+                    } else {
+                        cost = 10;
+                    }
+
+                    if(!plugin.getEconomy().has((OfflinePlayer) e.getWhoClicked(), cost)) {
+                        plugin.getMessaging().sendMessage(e.getWhoClicked(), true, plugin.getLanguage().getMessage("canNotAfford"));
+                        return;
+                    }
+
+                    plugin.getEconomy().withdrawPlayer((OfflinePlayer) e.getWhoClicked(), cost);
+
+                    if(traderUUID != null && traderUUID.equals(e.getWhoClicked().getUniqueId())) {
+                        traderMoney = traderMoney + cost;
+                    } else if(tradeeUUID != null && tradeeUUID.equals(e.getWhoClicked().getUniqueId())) {
+                        tradeeMoney = tradeeMoney + cost;
+                    }
+                }
+
+                refreshTraderInfo(e);
+                break;
+            }
+            case 25: {
+                int returned = 0;
+
+                if(e.isShiftClick()) {
+                    returned = 100;
+                } else {
+                    returned = 10;
+                }
+
+                if(traderUUID != null && traderUUID.equals(e.getWhoClicked().getUniqueId())) {
+                    if(traderMoney < returned) {
+                        plugin.getEconomy().depositPlayer((OfflinePlayer) e.getWhoClicked(), traderMoney);
+                        traderMoney = 0;
+                    } else {
+                        plugin.getEconomy().depositPlayer((OfflinePlayer) e.getWhoClicked(), returned);
+                        traderMoney = traderMoney - returned;
+                    }
+
+                    traderMoney = traderMoney - returned;
+                } else if(tradeeUUID != null && tradeeUUID.equals(e.getWhoClicked().getUniqueId())) {
+                    if(tradeeMoney < returned) {
+                        plugin.getEconomy().depositPlayer((OfflinePlayer) e.getWhoClicked(), tradeeMoney);
+                        tradeeMoney = 0;
+                    } else {
+                        plugin.getEconomy().depositPlayer((OfflinePlayer) e.getWhoClicked(), returned);
+                        tradeeMoney = tradeeMoney - returned;
+                    }
+                }
+
+                refreshTraderInfo(e);
+                break;
+            }
+            case 26: {
+                cancelTrade();
+                break;
+            }
             default:
                 break;
         }
@@ -341,8 +427,7 @@ public class TradeMenu {
         Wool wool = new Wool();
         wool.setColor(DyeColor.RED);
 
-        ItemStack itemStack = wool.toItemStack();
-        itemStack.setAmount(1);
+        ItemStack itemStack = wool.toItemStack(1);
         ItemMeta itemMeta = itemStack.getItemMeta();
 
         Player player = plugin.getServer().getPlayer(traderUUID);
@@ -377,8 +462,7 @@ public class TradeMenu {
         Wool wool = new Wool();
         wool.setColor(DyeColor.RED);
 
-        ItemStack itemStack = wool.toItemStack();
-        itemStack.setAmount(1);
+        ItemStack itemStack = wool.toItemStack(1);
         ItemMeta itemMeta = itemStack.getItemMeta();
 
         Player player = plugin.getServer().getPlayer(tradeeUUID);
@@ -417,9 +501,9 @@ public class TradeMenu {
 
         List<String> loreList = new ArrayList<String>();
 
-        for(String loreString: plugin.getConfig().getStringList(headerString + "tradeInfo.lore")) {
-            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString.replace("{trader-money}", traderMoney + " " + getCurrencyName(traderMoney)).replace("{tradee-money}", tradeeMoney + " " + getCurrencyName(tradeeMoney))));
-        }
+        loreList.add("Current Trade Information:");
+        loreList.add("Trader Money: " + traderMoney + " " + formatMoney(traderMoney));
+        loreList.add("Tradee Money: " + tradeeMoney + " " + formatMoney(tradeeMoney));
 
         itemMeta.setLore(loreList);
         itemStack.setItemMeta(itemMeta);
@@ -458,12 +542,12 @@ public class TradeMenu {
         ItemStack itemStack = new ItemStack(Material.GOLD_NUGGET);
         ItemMeta itemMeta = itemStack.getItemMeta();
 
-        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "addOneCurrency.name").replace("{currency}", getCurrencyName(1))));
+        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "addOneCurrency.name").replace("{currency}", formatMoney(1))));
 
         List<String> loreList = new ArrayList<String>();
 
         for(String loreString: plugin.getConfig().getStringList(headerString + "addOneCurrency.lore")) {
-            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString.replace("{currency}", getCurrencyName(1))));
+            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString.replace("{currency}", formatMoney(1))));
         }
 
         itemMeta.setLore(loreList);
@@ -477,15 +561,15 @@ public class TradeMenu {
      * @return the default ItemStack for the remove one currency item
      */
     public ItemStack getNewRemoveOneCurrencyStack() {
-        ItemStack itemStack = new ItemStack(Material.GOLD_NUGGET);
+        ItemStack itemStack = new ItemStack(Material.GHAST_TEAR);
         ItemMeta itemMeta = itemStack.getItemMeta();
 
-        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "removeOneCurrency.name").replace("{currency}", getCurrencyName(1))));
+        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "removeOneCurrency.name").replace("{currency}", formatMoney(1))));
 
         List<String> loreList = new ArrayList<String>();
 
         for(String loreString: plugin.getConfig().getStringList(headerString + "removeOneCurrency.lore")) {
-            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString.replace("{currency}", getCurrencyName(1))));
+            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString.replace("{currency}", formatMoney(1))));
         }
 
         itemMeta.setLore(loreList);
@@ -502,12 +586,12 @@ public class TradeMenu {
         ItemStack itemStack = new ItemStack(Material.GOLD_INGOT);
         ItemMeta itemMeta = itemStack.getItemMeta();
 
-        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "addTenCurrency.name").replace("{currency}", getCurrencyName(10))));
+        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "addTenCurrency.name").replace("{currency}", formatMoney(10))));
 
         List<String> loreList = new ArrayList<String>();
 
         for(String loreString: plugin.getConfig().getStringList(headerString + "addTenCurrency.lore")) {
-            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString.replace("{currency}", getCurrencyName(10))));
+            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString.replace("{currency}", formatMoney(10))));
         }
 
         itemMeta.setLore(loreList);
@@ -524,12 +608,12 @@ public class TradeMenu {
         ItemStack itemStack = new ItemStack(Material.IRON_INGOT);
         ItemMeta itemMeta = itemStack.getItemMeta();
 
-        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "removeTenCurrency.name").replace("{currency}", getCurrencyName(10))));
+        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "removeTenCurrency.name").replace("{currency}", formatMoney(10))));
 
         List<String> loreList = new ArrayList<String>();
 
         for(String loreString: plugin.getConfig().getStringList(headerString + "removeTenCurrency.lore")) {
-            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString.replace("{currency}", getCurrencyName(10))));
+            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString.replace("{currency}", formatMoney(10))));
         }
 
         itemMeta.setLore(loreList);
@@ -566,7 +650,6 @@ public class TradeMenu {
      */
     public void setTraderUUID(UUID UUID) {
         traderUUID = UUID;
-        buildInventory();
     }
 
     /**
@@ -575,18 +658,139 @@ public class TradeMenu {
      */
     public void setTradeeUUID(UUID UUID) {
         tradeeUUID = UUID;
-        buildInventory();
     }
 
-    private String getCurrencyName(int amount) {
+    private THashSet<ItemStack> getTraderItemStacks() {
+        THashSet<ItemStack> itemStackList = new THashSet<>();
+
+        if(inventory == null) {return itemStackList;}
+
+        for(int i = 0; i < inventory.getContents().length; i++) {
+            if(isTraderSlot(i)) {
+                if(inventory.getItem(i)!= null && inventory.getItem(i).getType() != Material.AIR) {
+                    itemStackList.add(inventory.getItem(i));
+                }
+            }
+        }
+
+        return itemStackList;
+    }
+
+    private THashSet<ItemStack> getTradeeItemStacks() {
+        THashSet<ItemStack> itemStackList = new THashSet<>();
+
+        if(inventory == null) {return itemStackList;}
+
+        for(int i = 0; i < inventory.getContents().length; i++) {
+            if(isTradeeSlot(i)) {
+                if(inventory.getItem(i) != null && inventory.getItem(i).getType() != Material.AIR) {
+                    itemStackList.add(inventory.getItem(i));
+                }
+            }
+        }
+
+        return itemStackList;
+    }
+
+    private String formatMoney(int amount) {
         String currencyName;
 
         if(plugin.getEconomy() != null) {
-            currencyName = plugin.getEconomy().format(amount).replace(String.valueOf(amount), "");
+            if(amount == 0 || amount > 0) {
+                currencyName = plugin.getEconomy().currencyNamePlural();
+
+                if(currencyName.trim().equalsIgnoreCase("")) {
+                    currencyName = plugin.getEconomy().format(amount);
+                }
+            } else {
+                currencyName = plugin.getEconomy().currencyNameSingular();
+
+                if (currencyName.trim().equalsIgnoreCase("")) {
+                    currencyName = plugin.getEconomy().format(amount);
+                }
+            }
         } else {
             currencyName = "none";
         }
 
         return currencyName;
+    }
+
+    private void refreshTraderInfo(InventoryClickEvent e) {
+        ItemMeta itemMeta = tradeInfoStack.getItemMeta();
+
+        List<String> loreList = new ArrayList<String>();
+
+        loreList.add("Current Trade Information:");
+        loreList.add("Trader Money: " + traderMoney + " " + formatMoney(traderMoney));
+        loreList.add("Tradee Money: " + tradeeMoney + " " + formatMoney(tradeeMoney));
+
+        itemMeta.setLore(loreList);
+
+        tradeInfoStack.setItemMeta(itemMeta);
+
+        e.getView().getTopInventory().setItem(reservedSlotArray[2], tradeInfoStack);
+    }
+
+    private void toggleReadinessStack(InventoryClickEvent e) {
+        if(e.getCurrentItem() == null || e.getCurrentItem().getType() != Material.WOOL) {return;}
+
+        Wool wool = (Wool) e.getCurrentItem().getData();
+
+        if (wool.getColor() == DyeColor.RED) {
+            wool.setColor(DyeColor.GREEN);
+        } else {
+            wool.setColor(DyeColor.RED);
+        }
+
+        ItemStack itemStack = wool.toItemStack(1);
+        itemStack.setItemMeta(e.getCurrentItem().getItemMeta());
+
+        e.getView().getTopInventory().setItem(e.getRawSlot(), itemStack);
+    }
+
+    /**
+     * Called to cancel a trade
+     */
+    public void cancelTrade() {
+        final List<HumanEntity> viewers = inventory.getViewers();
+
+        plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
+            @Override
+            public void run() {
+                for (HumanEntity viewer : viewers) {
+                    if(viewer == null) {continue;}
+
+                    if(viewer.getUniqueId().equals(traderUUID)) {
+                        for (ItemStack itemStack : getTraderItemStacks()) {
+                            Item item = viewer.getWorld().dropItem(viewer.getLocation(), itemStack);
+                            item.setMetadata("p-protected", new FixedMetadataValue(plugin, traderUUID));
+                        }
+                    }
+
+                    if(viewer.getUniqueId().equals(tradeeUUID)) {
+                        for (ItemStack itemStack : getTradeeItemStacks()) {
+                            Item item = viewer.getWorld().dropItem(viewer.getLocation(), itemStack);
+                            item.setMetadata("p-protected", new FixedMetadataValue(plugin, tradeeUUID));
+                        }
+                    }
+
+                    final List<HumanEntity> viewers = inventory.getViewers();
+
+                    plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
+                        @Override
+                        public void run() {
+                            for(HumanEntity humanEntity: viewers) {
+                                humanEntity.closeInventory();
+                            }
+                        }
+                    }, 1);
+
+                    plugin.getMessaging().sendMessage(viewer, true, plugin.getLanguage().getMessage("tradeCancelled"));
+                }
+            }
+        }, 1);
+
+        plugin.removeActiveTrade(this);
     }
 }

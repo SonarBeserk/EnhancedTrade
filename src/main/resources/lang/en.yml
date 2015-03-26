@@ -52,6 +52,8 @@ playerNotFound: "&b{name} &ccan not be found!"
 # Sent when a player is still trading
 stillTrading: "&cYou are still trading! Please run /trade to reopen the trade!"
 
+# Trade
+
 # Sent when a player sends a trade request to another player | {name} - the name of the player being traded with
 tradePlayer: "&2You have sent a trade request to &b{name}&2!"
 
@@ -66,3 +68,14 @@ tradeAccepted: "&2Your trade with &b{name} &2has been accepted! Use /trade to st
 
 # Sent when a player tries to trade with themselves
 tradeSelfNotAllowed: "&cYou may not trade with yourself!"
+
+# Sent when a trade is cancelled
+tradeCancelled: "&cCurrent trade has been cancelled!"
+
+# Sent when a player tries to trade and the trade has not been accepted
+tradeWaiting: "&cYou must wait until your trade partner accepts!"
+
+# Can not
+
+# Sent when a player can not afford something
+canNotAfford: "&cYou can not afford to do this!"

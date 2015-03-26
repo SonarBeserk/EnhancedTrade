@@ -59,12 +59,6 @@ settings:
           # What named should be used for this entry?
           name: "&bTrade Info"
 
-          # What lore should be added to this entry? | {trader-money} - the value for the trader's money | {tradee-money} - the value for the tradee's money
-          lore:
-          - "Current Trade Information:"
-          - "Trader Money: {trader-money}"
-          - "Tradee Money: {tradee-money}"
-
        # Remind Player entry
         remindPlayer:
 
@@ -84,7 +78,7 @@ settings:
           # What lore should be added to this entry? | {currency} - the name of the configured currency
           lore:
           - "Click to add 1 {currency} to the trade."
-          - "Shift Click to add 10 {currency} to the trade"
+          - "Shift Click to add {currency} to the trade"
 
        # Remove one currency entry
         removeOneCurrency:
