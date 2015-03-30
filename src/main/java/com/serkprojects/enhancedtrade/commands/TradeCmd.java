@@ -25,6 +25,7 @@ package com.serkprojects.enhancedtrade.commands;
 
 import com.serkprojects.enhancedtrade.EnhancedTrade;
 import com.serkprojects.enhancedtrade.menu.TradeMenu;
+import org.bukkit.GameMode;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -47,6 +48,11 @@ public class TradeCmd implements CommandExecutor {
         Player senderPlayer = (Player) sender;
 
         if (args.length == 0) {
+            if(plugin.getConfig().getBoolean("settings.trade.allowedCreativeTrading") && senderPlayer.getGameMode() == GameMode.CREATIVE) {
+                plugin.getMessaging().sendMessage(senderPlayer, true, plugin.getLanguage().getMessage("tradeCreativeNotAllowed"));
+                return true;
+            }
+
             TradeMenu currentTradeMenu = null;
             for(TradeMenu tradeMenu: plugin.getActiveTrades()) {
                 if(tradeMenu.getTraderUUID() != null && tradeMenu.getTraderUUID().equals(senderPlayer.getUniqueId()) || tradeMenu.getTradeeUUID() != null && tradeMenu.getTradeeUUID().equals(senderPlayer.getUniqueId())) {
@@ -68,6 +74,11 @@ public class TradeCmd implements CommandExecutor {
         }
 
         if (args.length > 0) {
+            if(plugin.getConfig().getBoolean("settings.trade.allowedCreativeTrading") && senderPlayer.getGameMode() == GameMode.CREATIVE) {
+                plugin.getMessaging().sendMessage(senderPlayer, true, plugin.getLanguage().getMessage("tradeCreativeNotAllowed"));
+                return true;
+            }
+
             if(plugin.isTrading(senderPlayer.getUniqueId())) {
                 plugin.getMessaging().sendMessage(senderPlayer, true, plugin.getLanguage().getMessage("stillTrading"));
                 return true;
@@ -88,6 +99,7 @@ public class TradeCmd implements CommandExecutor {
             for(TradeMenu tradeMenu: plugin.getActiveTrades()) {
                 if(tradeMenu.getTraderUUID() != null && tradeMenu.getTraderUUID().equals(targetPlayer.getUniqueId())) {
                     tradeMenu.setTradeeUUID(senderPlayer.getUniqueId());
+                    plugin.getTradeCancelTask().removeTradeCounter(tradeMenu);
                     plugin.getMessaging().sendMessage(senderPlayer, true, plugin.getLanguage().getMessage("tradeAccept").replace("{name}", targetPlayer.getName()));
                     plugin.getMessaging().sendMessage(targetPlayer, true, plugin.getLanguage().getMessage("tradeAccepted").replace("{name}", senderPlayer.getName()));
                     return true;
@@ -98,6 +110,7 @@ public class TradeCmd implements CommandExecutor {
             tradeMenu.setTraderUUID(senderPlayer.getUniqueId());
 
             plugin.addActiveTrade(tradeMenu);
+            plugin.getTradeCancelTask().addTradeCounter(tradeMenu);
 
             plugin.getMessaging().sendMessage(sender, true, plugin.getLanguage().getMessage("tradePlayer").replace("{name}", targetPlayer.getName()));
             plugin.getMessaging().sendMessage(targetPlayer, true, plugin.getLanguage().getMessage("tradeSent").replace("{name}", senderPlayer.getName()));

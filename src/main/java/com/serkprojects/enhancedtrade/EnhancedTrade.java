@@ -27,6 +27,7 @@ import com.serkprojects.enhancedtrade.commands.TradeCmd;
 import com.serkprojects.enhancedtrade.listeners.MenuListener;
 import com.serkprojects.enhancedtrade.listeners.PlayerListener;
 import com.serkprojects.enhancedtrade.menu.TradeMenu;
+import com.serkprojects.enhancedtrade.tasks.TradeCancelTask;
 import com.serkprojects.serkcore.plugin.JavaPlugin;
 import gnu.trove.set.hash.THashSet;
 import net.milkbowl.vault.economy.Economy;
@@ -40,7 +41,7 @@ public class EnhancedTrade extends JavaPlugin {
     private Economy economy = null;
 
     private THashSet<TradeMenu> activeTrades = null;
-    // Use barriers in place of items waiting to be traded to prevent loss
+    private TradeCancelTask tradeCancelTask = null;
 
     @Override
     public boolean shouldSaveData() {
@@ -93,6 +94,10 @@ public class EnhancedTrade extends JavaPlugin {
 
         getServer().getPluginManager().registerEvents(new MenuListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
+
+        tradeCancelTask = new TradeCancelTask(this);
+
+        getServer().getScheduler().runTaskTimer(this, tradeCancelTask, 0, 1200);
     }
 
     private boolean setupEconomy() {
@@ -118,6 +123,14 @@ public class EnhancedTrade extends JavaPlugin {
      */
     public THashSet<TradeMenu> getActiveTrades() {
         return new THashSet<>(activeTrades);
+    }
+
+    /**
+     * Returns the trade cancel task
+     * @return the trade cancel task
+     */
+    public TradeCancelTask getTradeCancelTask() {
+        return tradeCancelTask;
     }
 
     /**

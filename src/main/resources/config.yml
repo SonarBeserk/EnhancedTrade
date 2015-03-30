@@ -21,6 +21,9 @@ settings:
   # Trade Settings
   trade:
 
+    # How many minutes can a trade idle for before being canceled?
+    cancelTime: 2
+
     # Should players in creative be allowed to trade?
     allowCreativeTrading: false
 

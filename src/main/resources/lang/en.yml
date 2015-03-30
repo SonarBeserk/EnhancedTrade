@@ -75,6 +75,9 @@ tradeCancelled: "&cCurrent trade has been cancelled!"
 # Sent when a player tries to trade and the trade has not been accepted
 tradeWaiting: "&cYou must wait until your trade partner accepts!"
 
+# Sent when a player tries to trade while in creative when not allowed
+tradeCreativeNotAllowed: "&cYou are not allowed to trade while in creative!"
+
 # Can not
 
 # Sent when a player can not afford something

@@ -127,7 +127,7 @@ public class TradeMenu {
         if(!built) {
             buildInventory();
         }
-        
+
         return inventory;
     }
 
