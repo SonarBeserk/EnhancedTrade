@@ -649,17 +649,10 @@ public class TradeMenu {
     }
 
     private String formatCurrencyVariable(String string) {
-        if (string.startsWith("{currency")) {
-            String[] splitString = string.replaceAll("^[a-zA-Z\\-]", "").split("\\-");
-
-            String formattedString = null;
-
-            if (splitString.length == 2) {
-                formattedString = formatCurrency(Integer.parseInt(splitString[1]));
-            }
-
-            if (formattedString != null) {
-                string = string.replace("{currency}", formattedString);
+        String[] splitString = string.split(" +");
+        for(String entry: splitString) {
+            if (entry.startsWith("{currency")) {
+                string = string.replace(entry, formatCurrency(Integer.parseInt(entry.replaceAll("[^1-9]", ""))));
             }
         }
 
@@ -670,17 +663,11 @@ public class TradeMenu {
         List<String> formattedVariables = new ArrayList<String>();
 
         for(String entry: stringList) {
-            if(entry.startsWith("{currency")) {
-                String[] splitString = entry.replaceAll("^[a-zA-Z\\-]", "").split("\\-");
+            String[] splitString = entry.split(" +");
 
-                String formattedString = null;
-
-                if(splitString.length == 2) {
-                    formattedString = formatCurrency(Integer.parseInt(splitString[1]));
-                }
-
-                if(formattedString != null) {
-                    entry = entry.replace("{currency}", formattedString);
+            for(String splitStringEntry: splitString) {
+                if (entry.startsWith("{currency")) {
+                    entry = entry.replace(splitStringEntry, formatCurrency(Integer.parseInt(splitStringEntry.replaceAll("[^1-9]", ""))));
                 }
             }
 
@@ -701,10 +688,10 @@ public class TradeMenu {
         List<String> loreList = new ArrayList<String>();
 
         loreList.add("Current Trade Information:");
-        loreList.add("Trader Money: " + traderMoney + " " + formatCurrency(traderMoney));
-        loreList.add("Tradee Money: " + tradeeMoney + " " + formatCurrency(tradeeMoney));
+        loreList.add("Trader Money: " + "{currency-" + traderMoney + "}");
+        loreList.add("Tradee Money: " + "{currency-" + tradeeMoney + "}");
 
-        itemMeta.setLore(loreList);
+        itemMeta.setLore(formatCurrencyVariables(loreList));
 
         itemStack.setItemMeta(itemMeta);
 
