@@ -38,6 +38,10 @@ import java.util.UUID;
 public class PlayerListener implements Listener {
     EnhancedTrade plugin = null;
 
+    /**
+     * Creates an instance of the player listener
+     * @param plugin the plugin to pull settings from
+     */
     public PlayerListener(EnhancedTrade plugin) {
         this.plugin = plugin;
     }
@@ -45,7 +49,8 @@ public class PlayerListener implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void playerQuit(PlayerQuitEvent e) {
         if(e.getPlayer() == null) {return;}
-        if(plugin.isTrading(e.getPlayer().getUniqueId())) {return;}
+
+        if(!plugin.isTrading(e.getPlayer().getUniqueId(), false)) {return;}
 
         TradeMenu currentTradeMenu = null;
 
@@ -57,13 +62,17 @@ public class PlayerListener implements Listener {
 
         if(currentTradeMenu == null) {return;}
 
-        currentTradeMenu.cancelTrade();
+        if(currentTradeMenu.isAwaitingAcceptance()) {
+            currentTradeMenu.denyTrade();
+        } else {
+            currentTradeMenu.cancelTrade();
+        }
     }
 
     @EventHandler(ignoreCancelled = true)
     public void playerKick(PlayerKickEvent e) {
         if(e.getPlayer() == null) {return;}
-        if(plugin.isTrading(e.getPlayer().getUniqueId())) {return;}
+        if(!plugin.isTrading(e.getPlayer().getUniqueId(), false)) {return;}
 
         TradeMenu currentTradeMenu = null;
 
@@ -75,7 +84,11 @@ public class PlayerListener implements Listener {
 
         if(currentTradeMenu == null) {return;}
 
-        currentTradeMenu.cancelTrade();
+        if(currentTradeMenu.isAwaitingAcceptance()) {
+            currentTradeMenu.denyTrade();
+        } else {
+            currentTradeMenu.cancelTrade();
+        }
     }
 
     @EventHandler(ignoreCancelled = true)

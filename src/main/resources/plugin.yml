@@ -12,7 +12,7 @@ commands:
     aliases: [${project.name.short}]
   trade:
     description: command used for trading
-    usage: "/trade Usage: /trade (name)"
+    usage: "/trade Usage: /trade help"
 permissions:
 
   # Parent Nodes

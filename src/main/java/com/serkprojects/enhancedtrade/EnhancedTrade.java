@@ -28,6 +28,7 @@ import com.serkprojects.enhancedtrade.listeners.MenuListener;
 import com.serkprojects.enhancedtrade.listeners.PlayerListener;
 import com.serkprojects.enhancedtrade.menu.TradeMenu;
 import com.serkprojects.enhancedtrade.tasks.TradeCancelTask;
+import com.serkprojects.enhancedtrade.tasks.TradeTickDownTask;
 import com.serkprojects.serkcore.plugin.JavaPlugin;
 import gnu.trove.set.hash.THashSet;
 import net.milkbowl.vault.economy.Economy;
@@ -42,6 +43,7 @@ public class EnhancedTrade extends JavaPlugin {
 
     private THashSet<TradeMenu> activeTrades = null;
     private TradeCancelTask tradeCancelTask = null;
+    private TradeTickDownTask tradeTickDownTask = null;
 
     @Override
     public boolean shouldSaveData() {
@@ -96,8 +98,10 @@ public class EnhancedTrade extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
 
         tradeCancelTask = new TradeCancelTask(this);
+        tradeCancelTask.runTaskTimer(this, 0, 1200);
 
-        getServer().getScheduler().runTaskTimer(this, tradeCancelTask, 0, 1200);
+        tradeTickDownTask = new TradeTickDownTask(this);
+        tradeTickDownTask.runTaskTimer(this, 0, 20);
     }
 
     private boolean setupEconomy() {
@@ -134,6 +138,14 @@ public class EnhancedTrade extends JavaPlugin {
     }
 
     /**
+     * Returns the trade tick down task
+     * @return the trade tick down task
+     */
+    public TradeTickDownTask getTradeTickDownTask() {
+        return tradeTickDownTask;
+    }
+
+    /**
      * Adds an active trade
      * @param tradeMenu the trade menu instance
      */
@@ -156,9 +168,17 @@ public class EnhancedTrade extends JavaPlugin {
      * @param UUID the UUID to check
      * @return if a UUID is involved in a trade
      */
-    public boolean isTrading(UUID UUID) {
+    public boolean isTrading(UUID UUID, boolean onlyAccepted) {
         for(TradeMenu tradeMenu: activeTrades) {
-            if(UUID.equals(tradeMenu.getTraderUUID()) || UUID.equals(tradeMenu.getTradeeUUID())) {
+            if(UUID.equals(tradeMenu.getTraderUUID())|| UUID.equals(tradeMenu.getTradeeUUID())) {
+                if(onlyAccepted) {
+                    if(tradeMenu.isAwaitingAcceptance()) {
+                        return false;
+                    } else {
+                        return true;
+                    }
+                }
+
                 return true;
             }
         }

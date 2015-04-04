@@ -34,6 +34,10 @@ import org.bukkit.entity.Player;
 public class TradeCmd implements CommandExecutor {
     private EnhancedTrade plugin = null;
 
+    /**
+     * Creates an instance of the CommandExecutor for the trade command
+     * @param plugin the instance of the plugin to draw settings from
+     */
     public TradeCmd(EnhancedTrade plugin) {
         this.plugin = plugin;
     }
@@ -53,22 +57,6 @@ public class TradeCmd implements CommandExecutor {
                 return true;
             }
 
-            TradeMenu currentTradeMenu = null;
-            for(TradeMenu tradeMenu: plugin.getActiveTrades()) {
-                if(tradeMenu.getTraderUUID() != null && tradeMenu.getTraderUUID().equals(senderPlayer.getUniqueId()) || tradeMenu.getTradeeUUID() != null && tradeMenu.getTradeeUUID().equals(senderPlayer.getUniqueId())) {
-                    if(tradeMenu.getTraderUUID() == null || tradeMenu.getTradeeUUID() == null) {
-                        plugin.getMessaging().sendMessage(senderPlayer, true, plugin.getLanguage().getMessage("tradeWaiting"));
-                        return true;
-                    }
-
-                    currentTradeMenu = tradeMenu;
-                }
-            }
-
-            if(currentTradeMenu != null) {
-                senderPlayer.openInventory(currentTradeMenu.getInventory());
-            }
-
             help(sender);
             return true;
         }
@@ -79,42 +67,25 @@ public class TradeCmd implements CommandExecutor {
                 return true;
             }
 
-            if(plugin.isTrading(senderPlayer.getUniqueId())) {
-                plugin.getMessaging().sendMessage(senderPlayer, true, plugin.getLanguage().getMessage("stillTrading"));
+            if(args[0].equalsIgnoreCase("r") || args[0].equalsIgnoreCase("request")) {
+                requestSubCommand(sender, args);
                 return true;
             }
 
-            Player targetPlayer = plugin.getServer().getPlayer(args[0]);
-
-            if(targetPlayer == null) {
-                plugin.getMessaging().sendMessage(senderPlayer, true, plugin.getLanguage().getMessage("playerNotFound").replace("{name}", args[0]));
+            if(args[0].equalsIgnoreCase("a") || args[0].equalsIgnoreCase("accept")) {
+                acceptSubCommand(sender);
                 return true;
             }
 
-            if(targetPlayer.getUniqueId().equals(senderPlayer.getUniqueId())) {
-                plugin.getMessaging().sendMessage(senderPlayer, true, plugin.getLanguage().getMessage("tradeSelfNotAllowed"));
+            if(args[0].equals("d") || args[0].equals("deny")) {
+                denySubCommand(sender);
                 return true;
             }
 
-            for(TradeMenu tradeMenu: plugin.getActiveTrades()) {
-                if(tradeMenu.getTraderUUID() != null && tradeMenu.getTraderUUID().equals(targetPlayer.getUniqueId())) {
-                    tradeMenu.setTradeeUUID(senderPlayer.getUniqueId());
-                    plugin.getTradeCancelTask().removeTradeCounter(tradeMenu);
-                    plugin.getMessaging().sendMessage(senderPlayer, true, plugin.getLanguage().getMessage("tradeAccept").replace("{name}", targetPlayer.getName()));
-                    plugin.getMessaging().sendMessage(targetPlayer, true, plugin.getLanguage().getMessage("tradeAccepted").replace("{name}", senderPlayer.getName()));
-                    return true;
-                }
+            if(args[0].equalsIgnoreCase("o") || args[0].equalsIgnoreCase("open")) {
+                openSubCommand(sender);
+                return true;
             }
-
-            TradeMenu tradeMenu = new TradeMenu(plugin);
-            tradeMenu.setTraderUUID(senderPlayer.getUniqueId());
-
-            plugin.addActiveTrade(tradeMenu);
-            plugin.getTradeCancelTask().addTradeCounter(tradeMenu);
-
-            plugin.getMessaging().sendMessage(sender, true, plugin.getLanguage().getMessage("tradePlayer").replace("{name}", targetPlayer.getName()));
-            plugin.getMessaging().sendMessage(targetPlayer, true, plugin.getLanguage().getMessage("tradeSent").replace("{name}", senderPlayer.getName()));
-            return true;
         }
 
         help(sender);
@@ -123,5 +94,101 @@ public class TradeCmd implements CommandExecutor {
 
     private void help(CommandSender sender) {
         plugin.getMessaging().sendMessage(sender, true, plugin.getLanguage().getMessage("usageTrade").replace("{name}", plugin.getDescription().getName()));
+    }
+
+    private void requestSubCommand(CommandSender sender, String[] args) {
+        Player senderPlayer = (Player) sender;
+
+        if(plugin.isTrading(senderPlayer.getUniqueId(), false)) {
+            plugin.getMessaging().sendMessage(senderPlayer, true, plugin.getLanguage().getMessage("tradeStillGoing"));
+            return;
+        }
+
+        Player targetPlayer = plugin.getServer().getPlayer(args[1]);
+
+        if(targetPlayer == null) {
+            plugin.getMessaging().sendMessage(senderPlayer, true, plugin.getLanguage().getMessage("playerNotFound").replace("{name}", args[1]));
+            return;
+        }
+
+        if(targetPlayer.getUniqueId().equals(senderPlayer.getUniqueId())) {
+            plugin.getMessaging().sendMessage(senderPlayer, true, plugin.getLanguage().getMessage("tradeSelfNotAllowed"));
+            return;
+        }
+
+        TradeMenu tradeMenu = new TradeMenu(plugin);
+        tradeMenu.setTraderUUID(senderPlayer.getUniqueId());
+        tradeMenu.setTradeeUUID(targetPlayer.getUniqueId());
+
+        plugin.addActiveTrade(tradeMenu);
+        plugin.getTradeCancelTask().addTradeCounter(tradeMenu);
+
+        plugin.getMessaging().sendMessage(sender, true, plugin.getLanguage().getMessage("tradePlayer").replace("{name}", targetPlayer.getName()));
+        plugin.getMessaging().sendMessage(targetPlayer, true, plugin.getLanguage().getMessage("tradeSent").replace("{name}", targetPlayer.getName()));
+    }
+
+    private void acceptSubCommand(CommandSender sender) {
+        Player senderPlayer = (Player) sender;
+
+        if(plugin.isTrading(senderPlayer.getUniqueId(), true)) {
+            plugin.getMessaging().sendMessage(senderPlayer, true, plugin.getLanguage().getMessage("tradeStillGoing"));
+            return;
+        }
+
+        for(TradeMenu tradeMenu: plugin.getActiveTrades()) {
+            if(tradeMenu.getTraderUUID() != null && tradeMenu.getTradeeUUID().equals(senderPlayer.getUniqueId())) {
+                Player traderPlayer = plugin.getServer().getPlayer(tradeMenu.getTraderUUID());
+                plugin.getTradeCancelTask().removeTradeCounter(tradeMenu);
+                tradeMenu.acceptTrade();
+                plugin.getMessaging().sendMessage(senderPlayer, true, plugin.getLanguage().getMessage("tradeAccept").replace("{name}", traderPlayer.getName()));
+                plugin.getMessaging().sendMessage(traderPlayer, true, plugin.getLanguage().getMessage("tradeAccepted").replace("{name}", senderPlayer.getName()));
+                return;
+            }
+        }
+    }
+
+    private void denySubCommand(CommandSender sender) {
+        Player senderPlayer = (Player) sender;
+
+        if(!plugin.isTrading(senderPlayer.getUniqueId(), true)) {
+            plugin.getMessaging().sendMessage(senderPlayer, true, plugin.getLanguage().getMessage("tradeNotWaiting"));
+            return;
+        }
+
+        TradeMenu currentTradeMenu = null;
+        for(TradeMenu tradeMenu: plugin.getActiveTrades()) {
+            if(tradeMenu.getTraderUUID().equals(senderPlayer.getUniqueId()) && tradeMenu.isAwaitingAcceptance() || tradeMenu.getTradeeUUID().equals(senderPlayer.getUniqueId()) && tradeMenu.isAwaitingAcceptance()) {
+                currentTradeMenu = tradeMenu;
+            }
+        }
+
+        if(currentTradeMenu == null) {
+            plugin.getMessaging().sendMessage(senderPlayer, true, plugin.getLanguage().getMessage("tradeNotWaiting"));
+        } else {
+            currentTradeMenu.denyTrade();
+        }
+    }
+
+    private void openSubCommand(CommandSender sender) {
+        Player senderPlayer = (Player) sender;
+
+        if(!plugin.isTrading(senderPlayer.getUniqueId(), true)) {
+            plugin.getMessaging().sendMessage(senderPlayer, true, plugin.getLanguage().getMessage("tradeStillWaiting"));
+            return;
+        }
+
+        TradeMenu currentTradeMenu = null;
+        for(TradeMenu tradeMenu: plugin.getActiveTrades()) {
+            if(tradeMenu.getTraderUUID().equals(senderPlayer.getUniqueId()) && tradeMenu.isAwaitingAcceptance() || tradeMenu.getTradeeUUID().equals(senderPlayer.getUniqueId()) && tradeMenu.isAwaitingAcceptance()) {
+                plugin.getMessaging().sendMessage(senderPlayer, true, plugin.getLanguage().getMessage("tradeWaiting"));
+                return;
+            }
+
+            currentTradeMenu = tradeMenu;
+        }
+
+        if(currentTradeMenu != null) {
+            senderPlayer.openInventory(currentTradeMenu.getInventory());
+        }
     }
 }

@@ -36,9 +36,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.Wool;
 import org.bukkit.metadata.FixedMetadataValue;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class TradeMenu {
     private EnhancedTrade plugin = null;
@@ -60,17 +58,9 @@ public class TradeMenu {
     private int tradeeRangeStart = 27;
     private int tradeeRangeEnd = 44;
 
-    private ItemStack traderReadinessStack = null; //18
-    private ItemStack tradeeReadinessStack = null; //19
-    private ItemStack tradeInfoStack = null; //20
-    private ItemStack remindPlayerStack = null; //21
-    private ItemStack addOneCurrencyStack = null; //22
-    private ItemStack removeOneCurrencyStack = null; //23
-    private ItemStack addTenCurrencyStack = null; //24
-    private ItemStack removeTenCurrencyStack = null; //25
-    private ItemStack cancelTradeStack = null; //26
-
     private Inventory inventory = null;
+
+    private boolean awaitingAcceptance = true;
 
     private int traderMoney = 0;
     private int tradeeMoney = 0;
@@ -86,35 +76,18 @@ public class TradeMenu {
     }
 
     /**
-     * Call to build itemstacks
-     */
-    private void buildDefaultItemStacks() {
-        traderReadinessStack = getNewTraderReadinessStack();
-        tradeeReadinessStack = getNewTradeeReadinessStack();
-        tradeInfoStack = getNewTradeInfoStack();
-        remindPlayerStack = getNewRemindPlayerStack();
-        addOneCurrencyStack = getNewAddOneCurrencyStack();
-        removeOneCurrencyStack = getNewRemoveOneCurrencyStack();
-        addTenCurrencyStack = getNewAddTenCurrencyStack();
-        removeTenCurrencyStack = getNewRemoveTenCurrencyStack();
-        cancelTradeStack = getNewCancelTradeStack();
-    }
-
-    /**
      * Call to build inventory
      */
     private void buildInventory() {
-        buildDefaultItemStacks();
-
-        inventory.setItem(reservedSlotArray[0], traderReadinessStack);
-        inventory.setItem(reservedSlotArray[1], tradeeReadinessStack);
-        inventory.setItem(reservedSlotArray[2], tradeInfoStack);
-        inventory.setItem(reservedSlotArray[3], remindPlayerStack);
-        inventory.setItem(reservedSlotArray[4], addOneCurrencyStack);
-        inventory.setItem(reservedSlotArray[5], removeOneCurrencyStack);
-        inventory.setItem(reservedSlotArray[6], addTenCurrencyStack);
-        inventory.setItem(reservedSlotArray[7], removeTenCurrencyStack);
-        inventory.setItem(reservedSlotArray[8], cancelTradeStack);
+        inventory.setItem(reservedSlotArray[0], getNewTraderReadinessStack());
+        inventory.setItem(reservedSlotArray[1], getNewTradeeReadinessStack());
+        inventory.setItem(reservedSlotArray[2], getNewTradeInfoStack());
+        inventory.setItem(reservedSlotArray[3], getNewRemindPlayerStack());
+        inventory.setItem(reservedSlotArray[4], getNewAddOneCurrencyStack());
+        inventory.setItem(reservedSlotArray[5], getNewRemoveOneCurrencyStack());
+        inventory.setItem(reservedSlotArray[6], getNewAddTenCurrencyStack());
+        inventory.setItem(reservedSlotArray[7], getNewRemoveTenCurrencyStack());
+        inventory.setItem(reservedSlotArray[8], getNewCancelTradeStack());
 
         built = true;
     }
@@ -146,6 +119,14 @@ public class TradeMenu {
      */
     public UUID getTradeeUUID() {
         return tradeeUUID;
+    }
+
+    /**
+     * Returns if the trade needs to be accepted first
+     * @return if the trade needs to be accepted first
+     */
+    public boolean isAwaitingAcceptance() {
+        return awaitingAcceptance;
     }
 
     /**
@@ -183,6 +164,20 @@ public class TradeMenu {
     }
 
     /**
+     * Checks if the trade is complete
+     * @return if the the trade is complete
+     */
+    public boolean isTradeComplete() {
+        if (inventory.getItem(reservedSlotArray[0]) == null || inventory.getItem(reservedSlotArray[1]) == null) {return false;}
+        if (!inventory.getItem(reservedSlotArray[0]).hasItemMeta() || !inventory.getItem(reservedSlotArray[1]).hasItemMeta()) {return false;}
+
+        Wool traderWool = (Wool) inventory.getItem(reservedSlotArray[0]).getData();
+        Wool tradeeWool = (Wool) inventory.getItem(reservedSlotArray[1]).getData();
+
+        return tradeeWool.getColor() == DyeColor.GREEN && traderWool.getColor() == DyeColor.GREEN;
+    }
+
+    /**
      * Called when a reserved slot menu item is clicked
      * @param e the inventory click event related to the click
      */
@@ -194,12 +189,30 @@ public class TradeMenu {
                 if(!e.getWhoClicked().getUniqueId().equals(traderUUID)) {break;}
 
                 toggleReadinessStack(e);
+
+                if(isTradeComplete()) {
+                    plugin.getTradeTickDownTask().addTickingDownTradeMenu(this, plugin.getConfig().getInt("settings.trade.tickDownCounter"));
+                    setAllMenuItemAmounts(plugin.getConfig().getInt("settings.trade.tickDownCounter"));
+                } else {
+                    plugin.getTradeTickDownTask().removeTickingDownTradeMenu(this);
+                    setAllMenuItemAmounts(1);
+                }
+
                 break;
             }
             case 19: {
                 if(!e.getWhoClicked().getUniqueId().equals(tradeeUUID)) {break;}
 
                 toggleReadinessStack(e);
+
+                if(isTradeComplete()) {
+                    plugin.getTradeTickDownTask().addTickingDownTradeMenu(this, plugin.getConfig().getInt("settings.trade.tickDownCounter"));
+                    setAllMenuItemAmounts(plugin.getConfig().getInt("settings.trade.tickDownCounter"));
+                } else {
+                    plugin.getTradeTickDownTask().removeTickingDownTradeMenu(this);
+                    setAllMenuItemAmounts(1);
+                }
+
                 break;
             }
             case 21: {
@@ -217,7 +230,7 @@ public class TradeMenu {
             }
             case 22: {
                 if(plugin.getEconomy() != null) {
-                    int cost = 0;
+                    int cost;
 
                     if(e.isShiftClick()) {
                         cost = 10;
@@ -244,7 +257,7 @@ public class TradeMenu {
             }
             case 23: {
                 if(plugin.getEconomy() != null) {
-                    int returned = 0;
+                    int returned;
 
                     if(e.isShiftClick()) {
                         returned = 10;
@@ -278,7 +291,7 @@ public class TradeMenu {
             }
             case 24: {
                 if(plugin.getEconomy() != null) {
-                    int cost = 0;
+                    int cost;
 
                     if(e.isShiftClick()) {
                         cost = 100;
@@ -304,7 +317,7 @@ public class TradeMenu {
                 break;
             }
             case 25: {
-                int returned = 0;
+                int returned;
 
                 if(e.isShiftClick()) {
                     returned = 100;
@@ -342,78 +355,6 @@ public class TradeMenu {
             default:
                 break;
         }
-    }
-
-    /**
-     * Returns the ItemStack used for the trader readiness item
-     * @return the ItemStack used for the trader readiness item
-     */
-    public ItemStack getTraderReadinessStack() {
-        return traderReadinessStack;
-    }
-
-    /**
-     * Returns the ItemStack used for the tradee readiness item
-     * @return the ItemStack used for the tradee readiness item
-     */
-    public ItemStack getTradeeReadinessStack() {
-        return tradeeReadinessStack;
-    }
-
-    /**
-     * Returns the ItemStack used for the trade info item
-     * @return the ItemStack used for the trade info item
-     */
-    public ItemStack getTradeInfoStack() {
-        return tradeInfoStack;
-    }
-
-    /**
-     * Returns the ItemStack used for the remind player item
-     * @return the ItemStack used for the remind player item
-     */
-    public ItemStack getRemindPlayerStack() {
-        return remindPlayerStack;
-    }
-
-    /**
-     * Returns the ItemStack used for the remind player item
-     * @return the ItemStack used for the remind player item
-     */
-    public ItemStack getAddOneCurrencyStack() {
-        return addOneCurrencyStack;
-    }
-
-    /**
-     * Returns the ItemStack used for the remove one currency item
-     * @return the ItemStack used for the remove one currency item
-     */
-    public ItemStack getRemoveOneCurrencyStack() {
-        return removeOneCurrencyStack;
-    }
-
-    /**
-     * Returns the ItemStack used for the add ten currency item
-     * @return the ItemStack used for the add ten currency item
-     */
-    public ItemStack getAddTenCurrencyStack() {
-        return addTenCurrencyStack;
-    }
-
-    /**
-     * Returns the ItemStack used for the remove ten currency item
-     * @return the ItemStack used for the remove ten currency item
-     */
-    public ItemStack getRemoveTenCurrencyStack() {
-        return removeTenCurrencyStack;
-    }
-
-    /**
-     * Returns the ItemStack used for the cancel trade item
-     * @return the ItemStack used for the cancel trade item
-     */
-    public ItemStack getCancelTradeStack() {
-        return cancelTradeStack;
     }
 
     /**
@@ -499,10 +440,10 @@ public class TradeMenu {
         List<String> loreList = new ArrayList<String>();
 
         loreList.add("Current Trade Information:");
-        loreList.add("Trader Money: " + traderMoney + " " + formatMoney(traderMoney));
-        loreList.add("Tradee Money: " + tradeeMoney + " " + formatMoney(tradeeMoney));
+        loreList.add("Trader Money: " + "{currency-" + traderMoney + "}");
+        loreList.add("Tradee Money: " + "{currency-" + tradeeMoney + "}");
 
-        itemMeta.setLore(loreList);
+        itemMeta.setLore(formatCurrencyVariables(loreList));
         itemStack.setItemMeta(itemMeta);
 
         return itemStack;
@@ -539,15 +480,15 @@ public class TradeMenu {
         ItemStack itemStack = new ItemStack(Material.GOLD_NUGGET);
         ItemMeta itemMeta = itemStack.getItemMeta();
 
-        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "addOneCurrency.name").replace("{currency}", formatMoney(1))));
+        itemMeta.setDisplayName(formatCurrencyVariable(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "addOneCurrency.name"))));
 
         List<String> loreList = new ArrayList<String>();
 
         for(String loreString: plugin.getConfig().getStringList(headerString + "addOneCurrency.lore")) {
-            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString.replace("{currency}", formatMoney(1))));
+            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString));
         }
 
-        itemMeta.setLore(loreList);
+        itemMeta.setLore(formatCurrencyVariables(loreList));
         itemStack.setItemMeta(itemMeta);
 
         return itemStack;
@@ -561,15 +502,15 @@ public class TradeMenu {
         ItemStack itemStack = new ItemStack(Material.GHAST_TEAR);
         ItemMeta itemMeta = itemStack.getItemMeta();
 
-        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "removeOneCurrency.name").replace("{currency}", formatMoney(1))));
+        itemMeta.setDisplayName(formatCurrencyVariable(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "removeOneCurrency.name"))));
 
         List<String> loreList = new ArrayList<String>();
 
         for(String loreString: plugin.getConfig().getStringList(headerString + "removeOneCurrency.lore")) {
-            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString.replace("{currency}", formatMoney(1))));
+            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString));
         }
 
-        itemMeta.setLore(loreList);
+        itemMeta.setLore(formatCurrencyVariables(loreList));
         itemStack.setItemMeta(itemMeta);
 
         return itemStack;
@@ -583,15 +524,15 @@ public class TradeMenu {
         ItemStack itemStack = new ItemStack(Material.GOLD_INGOT);
         ItemMeta itemMeta = itemStack.getItemMeta();
 
-        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "addTenCurrency.name").replace("{currency}", formatMoney(10))));
+        itemMeta.setDisplayName(formatCurrencyVariable(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "addTenCurrency.name"))));
 
         List<String> loreList = new ArrayList<String>();
 
         for(String loreString: plugin.getConfig().getStringList(headerString + "addTenCurrency.lore")) {
-            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString.replace("{currency}", formatMoney(10))));
+            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString));
         }
 
-        itemMeta.setLore(loreList);
+        itemMeta.setLore(formatCurrencyVariables(loreList));
         itemStack.setItemMeta(itemMeta);
 
         return itemStack;
@@ -605,15 +546,15 @@ public class TradeMenu {
         ItemStack itemStack = new ItemStack(Material.IRON_INGOT);
         ItemMeta itemMeta = itemStack.getItemMeta();
 
-        itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "removeTenCurrency.name").replace("{currency}", formatMoney(10))));
+        itemMeta.setDisplayName(formatCurrencyVariable(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString(headerString + "removeTenCurrency.name"))));
 
         List<String> loreList = new ArrayList<String>();
 
         for(String loreString: plugin.getConfig().getStringList(headerString + "removeTenCurrency.lore")) {
-            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString.replace("{currency}", formatMoney(10))));
+            loreList.add(ChatColor.translateAlternateColorCodes('&', loreString));
         }
 
-        itemMeta.setLore(loreList);
+        itemMeta.setLore(formatCurrencyVariables(loreList));
         itemStack.setItemMeta(itemMeta);
 
         return itemStack;
@@ -639,22 +580,6 @@ public class TradeMenu {
         itemStack.setItemMeta(itemMeta);
 
         return itemStack;
-    }
-
-    /**
-     * Sets the UUID of the trader
-     * @param UUID the UUID to set the trader to
-     */
-    public void setTraderUUID(UUID UUID) {
-        traderUUID = UUID;
-    }
-
-    /**
-     * Sets the UUID of the tradee
-     * @param UUID the UUID to set the tradee to
-     */
-    public void setTradeeUUID(UUID UUID) {
-        tradeeUUID = UUID;
     }
 
     private THashSet<ItemStack> getTraderItemStacks() {
@@ -689,44 +614,101 @@ public class TradeMenu {
         return itemStackList;
     }
 
-    private String formatMoney(int amount) {
-        String currencyName;
+    /**
+     * Sets the UUID of the trader
+     * @param UUID the UUID to set the trader to
+     */
+    public void setTraderUUID(UUID UUID) {
+        traderUUID = UUID;
+    }
 
-        if(plugin.getEconomy() != null) {
-            if(amount == 0 || amount > 0) {
-                currencyName = plugin.getEconomy().currencyNamePlural();
+    /**
+     * Sets the UUID of the tradee
+     * @param UUID the UUID to set the tradee to
+     */
+    public void setTradeeUUID(UUID UUID) {
+        tradeeUUID = UUID;
+    }
 
-                if(currencyName.trim().equalsIgnoreCase("")) {
-                    currencyName = plugin.getEconomy().format(amount);
-                }
-            } else {
-                currencyName = plugin.getEconomy().currencyNameSingular();
-
-                if (currencyName.trim().equalsIgnoreCase("")) {
-                    currencyName = plugin.getEconomy().format(amount);
-                }
-            }
-        } else {
-            currencyName = "none";
+    /**
+     * Sets all menu items to a given amount, good for countdowns
+     * @param amount the amount to set menu items to
+     */
+    public void setAllMenuItemAmounts(int amount) {
+        for(int slot: reservedSlotArray) {
+            ItemStack itemStack = inventory.getItem(slot);
+            itemStack.setAmount(amount);
+            inventory.setItem(slot, itemStack);
         }
 
-        return currencyName;
+        for(HumanEntity humanEntity: inventory.getViewers()) {
+            if(humanEntity instanceof Player) {
+                ((Player) humanEntity).updateInventory();
+            }
+        }
+    }
+
+    private String formatCurrencyVariable(String string) {
+        if (string.startsWith("{currency")) {
+            String[] splitString = string.replaceAll("^[a-zA-Z\\-]", "").split("\\-");
+
+            String formattedString = null;
+
+            if (splitString.length == 2) {
+                formattedString = formatCurrency(Integer.parseInt(splitString[1]));
+            }
+
+            if (formattedString != null) {
+                string = string.replace("{currency}", formattedString);
+            }
+        }
+
+        return string;
+    }
+
+    private List<String> formatCurrencyVariables(List<String> stringList) {
+        List<String> formattedVariables = new ArrayList<String>();
+
+        for(String entry: stringList) {
+            if(entry.startsWith("{currency")) {
+                String[] splitString = entry.replaceAll("^[a-zA-Z\\-]", "").split("\\-");
+
+                String formattedString = null;
+
+                if(splitString.length == 2) {
+                    formattedString = formatCurrency(Integer.parseInt(splitString[1]));
+                }
+
+                if(formattedString != null) {
+                    entry = entry.replace("{currency}", formattedString);
+                }
+            }
+
+            formattedVariables.add(entry);
+        }
+
+        return formattedVariables;
+    }
+
+    private String formatCurrency(int amount) {
+        return plugin.getEconomy().format(amount);
     }
 
     private void refreshTraderInfo(InventoryClickEvent e) {
-        ItemMeta itemMeta = tradeInfoStack.getItemMeta();
+        ItemStack itemStack = e.getInventory().getItem(reservedSlotArray[2]);
+        ItemMeta itemMeta = itemStack.getItemMeta();
 
         List<String> loreList = new ArrayList<String>();
 
         loreList.add("Current Trade Information:");
-        loreList.add("Trader Money: " + traderMoney + " " + formatMoney(traderMoney));
-        loreList.add("Tradee Money: " + tradeeMoney + " " + formatMoney(tradeeMoney));
+        loreList.add("Trader Money: " + traderMoney + " " + formatCurrency(traderMoney));
+        loreList.add("Tradee Money: " + tradeeMoney + " " + formatCurrency(tradeeMoney));
 
         itemMeta.setLore(loreList);
 
-        tradeInfoStack.setItemMeta(itemMeta);
+        itemStack.setItemMeta(itemMeta);
 
-        e.getView().getTopInventory().setItem(reservedSlotArray[2], tradeInfoStack);
+        e.getView().getTopInventory().setItem(reservedSlotArray[2], itemStack);
     }
 
     private void toggleReadinessStack(InventoryClickEvent e) {
@@ -744,6 +726,22 @@ public class TradeMenu {
         itemStack.setItemMeta(e.getCurrentItem().getItemMeta());
 
         e.getView().getTopInventory().setItem(e.getRawSlot(), itemStack);
+    }
+
+    /**
+     * Called when the trade is accepted
+     */
+    public void acceptTrade() {
+        awaitingAcceptance = false;
+    }
+
+    /**
+     * Called when the trade is denied
+     */
+    public void denyTrade() {
+        plugin.getMessaging().sendMessage(plugin.getServer().getPlayer(tradeeUUID), true, plugin.getLanguage().getMessage("tradeDenied"));
+        plugin.getMessaging().sendMessage(plugin.getServer().getPlayer(traderUUID), true, plugin.getLanguage().getMessage("tradeHasBeenDenied"));
+        plugin.removeActiveTrade(this);
     }
 
     /**
@@ -772,22 +770,65 @@ public class TradeMenu {
                         }
                     }
 
-                    final List<HumanEntity> viewers = inventory.getViewers();
-
-                    plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
-                        @Override
-                        public void run() {
-                            for(HumanEntity humanEntity: viewers) {
-                                humanEntity.closeInventory();
-                            }
-                        }
-                    }, 1);
-
+                    viewer.closeInventory();
                     plugin.getMessaging().sendMessage(viewer, true, plugin.getLanguage().getMessage("tradeCancelled"));
                 }
             }
         }, 1);
 
+        plugin.removeActiveTrade(this);
+    }
+
+    /**
+     * Called to complete the trade
+     */
+    public void completeTrade() {
+        if(!isTradeComplete()) {return;}
+
+        final List<HumanEntity> viewers = inventory.getViewers();
+
+        plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
+            @Override
+            public void run() {
+                for (HumanEntity humanEntity : viewers) {
+                    humanEntity.closeInventory();
+                }
+            }
+        }, 1);
+
+        if(traderMoney > 0) {
+            plugin.getEconomy().depositPlayer(plugin.getServer().getPlayer(traderUUID), tradeeMoney);
+            plugin.getMessaging().sendMessage(plugin.getServer().getPlayer(traderUUID), true, plugin.getLanguage().getMessage("tradeReceivedMoney").replace("{amount}", traderMoney + formatCurrency(traderMoney)));
+        }
+
+        if(tradeeMoney > 0) {
+            plugin.getEconomy().depositPlayer(plugin.getServer().getPlayer(tradeeUUID), traderMoney);
+            plugin.getMessaging().sendMessage(plugin.getServer().getPlayer(tradeeUUID), true, plugin.getLanguage().getMessage("tradeReceivedMoney").replace("{amount}", tradeeMoney + formatCurrency(tradeeMoney)));
+        }
+
+        HashMap<Integer, ItemStack> remainingTraderStacks = plugin.getServer().getPlayer(traderUUID).getInventory().addItem(getTradeeItemStacks().toArray(new ItemStack[]{}));
+        HashMap<Integer, ItemStack> remainingTradeeStacks = plugin.getServer().getPlayer(tradeeUUID).getInventory().addItem(getTraderItemStacks().toArray(new ItemStack[]{}));
+
+        for (ItemStack traderItemStack : remainingTraderStacks.values()) {
+            Player tradee = plugin.getServer().getPlayer(tradeeUUID);
+            tradee.getWorld().dropItem(tradee.getLocation(), traderItemStack);
+        }
+
+        for (ItemStack tradeeItemStack : remainingTradeeStacks.values()) {
+            Player trader = plugin.getServer().getPlayer(traderUUID);
+            trader.getWorld().dropItem(trader.getLocation(), tradeeItemStack);
+        }
+
+        if(remainingTraderStacks.size() > 0) {
+            plugin.getMessaging().sendMessage(plugin.getServer().getPlayer(traderUUID), true, plugin.getLanguage().getMessage("tradeItemsDropped"));
+        }
+
+        if(remainingTradeeStacks.size() > 0) {
+            plugin.getMessaging().sendMessage(plugin.getServer().getPlayer(tradeeUUID), true, plugin.getLanguage().getMessage("tradeItemsDropped"));
+        }
+
+        plugin.getMessaging().sendMessage(plugin.getServer().getPlayer(traderUUID), true, plugin.getLanguage().getMessage("tradeComplete"));
+        plugin.getMessaging().sendMessage(plugin.getServer().getPlayer(tradeeUUID), true, plugin.getLanguage().getMessage("tradeComplete"));
         plugin.removeActiveTrade(this);
     }
 }

@@ -6,10 +6,10 @@ version: "1.0"
 # Usage
 
 # Usage for the plugin master command | {name} - the name of the plugin
-usageMain: "&7Subcommands: \n reload - reloads the all the plugin's files"
+usageMain: "&7Sub-Commands: \n reload - reloads the all the plugin's files"
 
 # Usage for the trade command
-usageTrade: "&7Trade Usage: /trade (name)"
+usageTrade: "&7Sub-Commands: \n request, r (name) - requests a trade with a player \n accept, a - accepts a trade request \n deny, d - denies a trade request \n open, o - opens your current trade"
 
 # Missing Version
 
@@ -47,24 +47,19 @@ commandPlayerRequired: "You must be a player to use this command!"
 # Sent when a player can not be found | {name} - the name of the player
 playerNotFound: "&b{name} &ccan not be found!"
 
-# Still
-
-# Sent when a player is still trading
-stillTrading: "&cYou are still trading! Please run /trade to reopen the trade!"
-
 # Trade
 
 # Sent when a player sends a trade request to another player | {name} - the name of the player being traded with
 tradePlayer: "&2You have sent a trade request to &b{name}&2!"
 
 # Sent when a player is sent a trade request | {name} - the name of the player being traded with
-tradeSent: "&2You have been sent a trade request by &b{name}&2! Use /trade &b{name} &2to trade with them!"
+tradeSent: "&2You have been sent a trade request by &b{name}&2! Use &b/trade accept &2to accept the trade with them!"
 
 # Sent when a player accepts a trade | {name} - the name of the player being traded with
-tradeAccept: "&2You have accepted a trade from &b{name}&2! Use /trade to start trading!"
+tradeAccept: "&2You have accepted a trade from &b{name}&2! Use &b/trade open &2to start trading!"
 
 # Sent when a player accepts another player's trade | {name} - the name of the player being traded with
-tradeAccepted: "&2Your trade with &b{name} &2has been accepted! Use /trade to start trading!"
+tradeAccepted: "&2Your trade with &b{name} &2has been accepted! Use &b/trade open &2to start trading!"
 
 # Sent when a player tries to trade with themselves
 tradeSelfNotAllowed: "&cYou may not trade with yourself!"
@@ -77,6 +72,24 @@ tradeWaiting: "&cYou must wait until your trade partner accepts!"
 
 # Sent when a player tries to trade while in creative when not allowed
 tradeCreativeNotAllowed: "&cYou are not allowed to trade while in creative!"
+
+# Sent when a player is still trading
+tradeStillGoing: "&cYou are still trading! Please run &b/trade open &cto reopen the trade!"
+
+# Sent when a trade is not waiting
+tradeNotWaiting: "&cYou have no trades waiting to be accepted!"
+
+# Sent when a trade is still waiting
+tradeStillWaiting: "&cYour trade has not been accepted yet!"
+
+# Sent when a trade completes
+tradeComplete: "&2Trade has been completed!"
+
+# Sent when a player receives money from a trade | {amount} - the formatted amount received
+tradeReceivedMoney: "&2You have received {amount} from the trade!"
+
+# Sent when items have been dropped at a player's location
+tradeItemsDropped: "&2Items you have received from the trade that could not be stacked have been dropped at your feet!"
 
 # Can not
 

@@ -37,6 +37,10 @@ import org.bukkit.event.inventory.InventoryType;
 public class MenuListener implements Listener {
     private EnhancedTrade plugin = null;
 
+    /**
+     * Creates an instance of the menu listener
+     * @param plugin the plugin to pull settings from
+     */
     public MenuListener(EnhancedTrade plugin) {
         this.plugin = plugin;
     }
@@ -73,6 +77,11 @@ public class MenuListener implements Listener {
                 currentTradeMenu.handleClick(e);
             }
 
+            return;
+        }
+
+        if(currentTradeMenu.isTradeComplete()) {
+            e.setCancelled(true);
             return;
         }
 
