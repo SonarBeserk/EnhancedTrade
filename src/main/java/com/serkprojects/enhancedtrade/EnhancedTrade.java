@@ -32,10 +32,8 @@ import com.serkprojects.enhancedtrade.tasks.TradeTickDownTask;
 import com.serkprojects.serkcore.plugin.JavaPlugin;
 import gnu.trove.set.hash.THashSet;
 import net.milkbowl.vault.economy.Economy;
-import org.bukkit.entity.HumanEntity;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
-import java.util.List;
 import java.util.UUID;
 
 public class EnhancedTrade extends JavaPlugin {
@@ -63,25 +61,7 @@ public class EnhancedTrade extends JavaPlugin {
     @Override
     public void onReload() {
         for(final TradeMenu tradeMenu: getActiveTrades()) {
-            final List<HumanEntity> viewers = tradeMenu.getInventory().getViewers();
-
-            getServer().getScheduler().runTaskLater(this, new Runnable() {
-                @Override
-                public void run() {
-                    for(HumanEntity humanEntity: viewers) {
-                        humanEntity.closeInventory();
-                    }
-                }
-            }, 1);
-
-            getServer().getScheduler().runTaskLater(this, new Runnable() {
-                @Override
-                public void run() {
-                    for(HumanEntity humanEntity: viewers) {
-                        humanEntity.openInventory(tradeMenu.getInventory());
-                    }
-                }
-            }, 1);
+            tradeMenu.cancelTrade();
         }
     }
 

@@ -217,13 +217,9 @@ public class TradeMenu {
             }
             case 21: {
                 if(e.getWhoClicked().getUniqueId().equals(traderUUID)) {
-                    if(plugin.getServer().getPlayer(tradeeUUID) != null) {
-                        plugin.getMessaging().sendMessage(plugin.getServer().getPlayer(tradeeUUID), true, plugin.getLanguage().getMessage("stillTrading"));
-                    }
+                    plugin.getMessaging().sendMessage(plugin.getServer().getPlayer(tradeeUUID), true, plugin.getLanguage().getMessage("tradeStillGoing"));
                 } else if(e.getWhoClicked().getUniqueId().equals(tradeeUUID)) {
-                    if(plugin.getServer().getPlayer(traderUUID) != null) {
-                        plugin.getMessaging().sendMessage(plugin.getServer().getPlayer(traderUUID), true, plugin.getLanguage().getMessage("stillTrading"));
-                    }
+                    plugin.getMessaging().sendMessage(plugin.getServer().getPlayer(traderUUID), true, plugin.getLanguage().getMessage("tradeStillGoing"));
                 }
 
                 break;
@@ -652,7 +648,7 @@ public class TradeMenu {
         String[] splitString = string.split(" +");
         for(String entry: splitString) {
             if (entry.startsWith("{currency")) {
-                string = string.replace(entry, formatCurrency(Integer.parseInt(entry.replaceAll("[^1-9]", ""))));
+                string = string.replace(entry, formatCurrency(Integer.parseInt(entry.replaceAll("[^0-9]", ""))));
             }
         }
 
@@ -666,8 +662,8 @@ public class TradeMenu {
             String[] splitString = entry.split(" +");
 
             for(String splitStringEntry: splitString) {
-                if (entry.startsWith("{currency")) {
-                    entry = entry.replace(splitStringEntry, formatCurrency(Integer.parseInt(splitStringEntry.replaceAll("[^1-9]", ""))));
+                if (splitStringEntry.startsWith("{currency")) {
+                    entry = entry.replace(splitStringEntry, formatCurrency(Integer.parseInt(splitStringEntry.replaceAll("[^0-9]", ""))));
                 }
             }
 
@@ -743,25 +739,36 @@ public class TradeMenu {
                 for (HumanEntity viewer : viewers) {
                     if(viewer == null) {continue;}
 
-                    if(viewer.getUniqueId().equals(traderUUID)) {
-                        for (ItemStack itemStack : getTraderItemStacks()) {
-                            Item item = viewer.getWorld().dropItem(viewer.getLocation(), itemStack);
-                            item.setMetadata("p-protected", new FixedMetadataValue(plugin, traderUUID));
-                        }
-                    }
-
-                    if(viewer.getUniqueId().equals(tradeeUUID)) {
-                        for (ItemStack itemStack : getTradeeItemStacks()) {
-                            Item item = viewer.getWorld().dropItem(viewer.getLocation(), itemStack);
-                            item.setMetadata("p-protected", new FixedMetadataValue(plugin, tradeeUUID));
-                        }
-                    }
-
                     viewer.closeInventory();
-                    plugin.getMessaging().sendMessage(viewer, true, plugin.getLanguage().getMessage("tradeCancelled"));
                 }
             }
         }, 1);
+
+        if(traderMoney > 0) {
+            plugin.getEconomy().depositPlayer(plugin.getServer().getPlayer(traderUUID), tradeeMoney);
+        }
+
+        if(tradeeMoney > 0) {
+            plugin.getEconomy().depositPlayer(plugin.getServer().getPlayer(tradeeUUID), traderMoney);
+        }
+
+        HashMap<Integer, ItemStack> remainingTraderStacks = plugin.getServer().getPlayer(traderUUID).getInventory().addItem(getTraderItemStacks().toArray(new ItemStack[]{}));
+        HashMap<Integer, ItemStack> remainingTradeeStacks = plugin.getServer().getPlayer(tradeeUUID).getInventory().addItem(getTradeeItemStacks().toArray(new ItemStack[]{}));
+
+        for (ItemStack traderItemStack : remainingTraderStacks.values()) {
+            Player trader = plugin.getServer().getPlayer(traderUUID);
+            Item item = trader.getWorld().dropItem(trader.getLocation(), traderItemStack);
+            item.setMetadata("p-protected", new FixedMetadataValue(plugin, trader.getUniqueId()));
+        }
+
+        for (ItemStack tradeeItemStack : remainingTradeeStacks.values()) {
+            Player tradee = plugin.getServer().getPlayer(tradeeUUID);
+            Item item = tradee.getWorld().dropItem(tradee.getLocation(), tradeeItemStack);
+            item.setMetadata("p-protected", new FixedMetadataValue(plugin, tradee.getUniqueId()));
+        }
+
+        plugin.getMessaging().sendMessage(plugin.getServer().getPlayer(traderUUID), true, plugin.getLanguage().getMessage("tradeCancelled"));
+        plugin.getMessaging().sendMessage(plugin.getServer().getPlayer(tradeeUUID), true, plugin.getLanguage().getMessage("tradeCancelled"));
 
         plugin.removeActiveTrade(this);
     }
@@ -784,26 +791,28 @@ public class TradeMenu {
         }, 1);
 
         if(traderMoney > 0) {
-            plugin.getEconomy().depositPlayer(plugin.getServer().getPlayer(traderUUID), tradeeMoney);
-            plugin.getMessaging().sendMessage(plugin.getServer().getPlayer(traderUUID), true, plugin.getLanguage().getMessage("tradeReceivedMoney").replace("{amount}", traderMoney + formatCurrency(traderMoney)));
+            plugin.getEconomy().depositPlayer(plugin.getServer().getPlayer(tradeeUUID), tradeeMoney);
+            plugin.getMessaging().sendMessage(plugin.getServer().getPlayer(tradeeUUID), true, plugin.getLanguage().getMessage("tradeReceivedMoney").replace("{amount}", traderMoney + formatCurrency(traderMoney)));
         }
 
         if(tradeeMoney > 0) {
-            plugin.getEconomy().depositPlayer(plugin.getServer().getPlayer(tradeeUUID), traderMoney);
-            plugin.getMessaging().sendMessage(plugin.getServer().getPlayer(tradeeUUID), true, plugin.getLanguage().getMessage("tradeReceivedMoney").replace("{amount}", tradeeMoney + formatCurrency(tradeeMoney)));
+            plugin.getEconomy().depositPlayer(plugin.getServer().getPlayer(traderUUID), traderMoney);
+            plugin.getMessaging().sendMessage(plugin.getServer().getPlayer(traderUUID), true, plugin.getLanguage().getMessage("tradeReceivedMoney").replace("{amount}", tradeeMoney + formatCurrency(tradeeMoney)));
         }
 
-        HashMap<Integer, ItemStack> remainingTraderStacks = plugin.getServer().getPlayer(traderUUID).getInventory().addItem(getTradeeItemStacks().toArray(new ItemStack[]{}));
-        HashMap<Integer, ItemStack> remainingTradeeStacks = plugin.getServer().getPlayer(tradeeUUID).getInventory().addItem(getTraderItemStacks().toArray(new ItemStack[]{}));
+        HashMap<Integer, ItemStack> remainingTraderStacks = plugin.getServer().getPlayer(tradeeUUID).getInventory().addItem(getTraderItemStacks().toArray(new ItemStack[]{}));
+        HashMap<Integer, ItemStack> remainingTradeeStacks = plugin.getServer().getPlayer(traderUUID).getInventory().addItem(getTradeeItemStacks().toArray(new ItemStack[]{}));
 
         for (ItemStack traderItemStack : remainingTraderStacks.values()) {
             Player tradee = plugin.getServer().getPlayer(tradeeUUID);
-            tradee.getWorld().dropItem(tradee.getLocation(), traderItemStack);
+            Item item = tradee.getWorld().dropItem(tradee.getLocation(), traderItemStack);
+            item.setMetadata("p-protected", new FixedMetadataValue(plugin, tradee.getUniqueId()));
         }
 
         for (ItemStack tradeeItemStack : remainingTradeeStacks.values()) {
             Player trader = plugin.getServer().getPlayer(traderUUID);
-            trader.getWorld().dropItem(trader.getLocation(), tradeeItemStack);
+            Item item = trader.getWorld().dropItem(trader.getLocation(), tradeeItemStack);
+            item.setMetadata("p-protected", new FixedMetadataValue(plugin, trader.getUniqueId()));
         }
 
         if(remainingTraderStacks.size() > 0) {
