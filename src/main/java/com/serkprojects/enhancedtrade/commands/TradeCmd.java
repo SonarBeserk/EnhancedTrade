@@ -140,6 +140,7 @@ public class TradeCmd implements CommandExecutor {
                 Player traderPlayer = plugin.getServer().getPlayer(tradeMenu.getTraderUUID());
                 plugin.getTradeCancelTask().removeTradeCounter(tradeMenu);
                 tradeMenu.acceptTrade();
+                senderPlayer.openInventory(tradeMenu.getInventory());
                 plugin.getMessaging().sendMessage(senderPlayer, true, plugin.getLanguage().getMessage("tradeAccept").replace("{name}", traderPlayer.getName()));
                 plugin.getMessaging().sendMessage(traderPlayer, true, plugin.getLanguage().getMessage("tradeAccepted").replace("{name}", senderPlayer.getName()));
                 return;

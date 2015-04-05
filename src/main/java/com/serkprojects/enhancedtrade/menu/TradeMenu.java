@@ -792,12 +792,12 @@ public class TradeMenu {
 
         if(traderMoney > 0) {
             plugin.getEconomy().depositPlayer(plugin.getServer().getPlayer(tradeeUUID), tradeeMoney);
-            plugin.getMessaging().sendMessage(plugin.getServer().getPlayer(tradeeUUID), true, plugin.getLanguage().getMessage("tradeReceivedMoney").replace("{amount}", traderMoney + formatCurrency(traderMoney)));
+            plugin.getMessaging().sendMessage(plugin.getServer().getPlayer(tradeeUUID), true, plugin.getLanguage().getMessage("tradeReceivedMoney").replace("{amount}", formatCurrency(traderMoney)));
         }
 
         if(tradeeMoney > 0) {
             plugin.getEconomy().depositPlayer(plugin.getServer().getPlayer(traderUUID), traderMoney);
-            plugin.getMessaging().sendMessage(plugin.getServer().getPlayer(traderUUID), true, plugin.getLanguage().getMessage("tradeReceivedMoney").replace("{amount}", tradeeMoney + formatCurrency(tradeeMoney)));
+            plugin.getMessaging().sendMessage(plugin.getServer().getPlayer(traderUUID), true, plugin.getLanguage().getMessage("tradeReceivedMoney").replace("{amount}", formatCurrency(tradeeMoney)));
         }
 
         HashMap<Integer, ItemStack> remainingTraderStacks = plugin.getServer().getPlayer(tradeeUUID).getInventory().addItem(getTraderItemStacks().toArray(new ItemStack[]{}));

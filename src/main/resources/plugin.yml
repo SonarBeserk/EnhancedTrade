@@ -16,19 +16,19 @@ commands:
 permissions:
 
   # Parent Nodes
-  ${project.name.short}.sysadmin:
+  ${project.permissionprefix}.sysadmin:
     description: "Gives system administrator level permissions, includes all lower levels."
     children:
-      ${project.name.short}.admin: true
-      ${project.name.short}.commands.reload: true
+      ${project.permissionprefix}.admin: true
+      ${project.permissionprefix}.commands.reload: true
     default: op
-  ${project.name.short}.admin:
+  ${project.permissionprefix}.admin:
     description: "Gives administrator level permissions, includes all lower levels."
     children:
-      ${project.name.short}.commands.book: true
+      ${project.permissionprefix}.commands.book: true
     default: op
 
   # Singular Nodes
-  ${project.name.short}.commands.reload:
+  ${project.permissionprefix}.commands.reload:
     description: "Allows use of the reload subcommand"
     default: op
